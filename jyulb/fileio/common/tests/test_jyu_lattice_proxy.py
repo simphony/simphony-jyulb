@@ -1,6 +1,4 @@
-"""
-    Testing module for jyu-lb proxy-lattice data class.
-"""
+"""Testing module for jyu-lb proxy-lattice data class."""
 import unittest
 import numpy as np
 import numpy.testing as np_test
@@ -10,7 +8,9 @@ from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
 
 
 class JYULatticeProxyTestCase(unittest.TestCase):
+
     """Test case for JYULatticeProxy class."""
+
     def setUp(self):
         h = 0.1
         nx = 10

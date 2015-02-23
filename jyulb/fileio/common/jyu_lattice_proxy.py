@@ -4,9 +4,13 @@ import numpy as np
 
 
 class JYULatticeProxy(ABCLattice):
+
     """
-    A Bravais lattice;
-    stores references to data containers (node related data).
+    A proxy lattice for accessing state data of a JYU-LB modeling engine.
+
+    Updates and queries of node data are relayed to external data storages.
+    Acknowledges only those CUBA keywords which are prescribed at the
+    initialization.
 
     Parameters
     ----------
@@ -18,8 +22,11 @@ class JYULatticeProxy(ABCLattice):
     size : tuple of D x size
         number of lattice nodes (in the direction of each axis).
     origin : D x float
-
+    data : dictionary
+        references (value) to external data storages (multidimensional
+        arrays) for each prescribed CUBA keyword (key)
     """
+
     def __init__(self, name, type, base_vect, size, origin, data):
         self.name = name
         self._type = type
@@ -49,13 +56,14 @@ class JYULatticeProxy(ABCLattice):
 
         Parameters
         ----------
-        index: tuple of D x int (node index coordinate)
+        index : tuple of D x int (node index coordinate)
 
         Returns
         -------
         A reference to a LatticeNode object
-
         """
+        # JYU-LB modeling engines assume a specific memory order;
+        # the indexes must be reversed in a data access
         ti = tuple(index)
         rev_ti = tuple(ti[::-1])
 
@@ -70,10 +78,11 @@ class JYULatticeProxy(ABCLattice):
 
         Parameters
         ----------
-        lat_node: reference to a LatticeNode object
+        lat_node : reference to a LatticeNode object
             data copied from the given node
-
         """
+        # JYU-LB modeling engines assume a specific memory order;
+        # the indexes must be reversed in a data access
         ind = lat_node.index
         rev_ind = tuple(ind[::-1])
 
@@ -86,13 +95,12 @@ class JYULatticeProxy(ABCLattice):
 
         Parameters
         ----------
-        indices: iterable set of D x int, optional
+        indices : iterable set of D x int, optional
             node index coordinates
 
-        Returns
+        Yields
         -------
-        A generator for LatticeNode objects
-
+        LatticeNode
         """
         if indices is None:
             for index in np.ndindex(self._size):
@@ -111,6 +119,5 @@ class JYULatticeProxy(ABCLattice):
         Returns
         -------
         D x float
-
         """
         return self.origin + self.base_vect*np.array(index)
