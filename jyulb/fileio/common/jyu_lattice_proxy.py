@@ -22,18 +22,18 @@ class JYULatticeProxy(ABCLattice):
     size : tuple of D x size
         number of lattice nodes (in the direction of each axis).
     origin : D x float
-    data : dictionary
+    external_node_data : dictionary
         references (value) to external data storages (multidimensional
         arrays) for each prescribed CUBA keyword (key)
     """
 
-    def __init__(self, name, type, base_vect, size, origin, data):
+    def __init__(self, name, type, base_vect, size, origin, ext_node_data):
         self.name = name
         self._type = type
         self._base_vect = np.array(base_vect, dtype=np.float64)
         self._size = tuple(size)
         self._origin = np.array(origin, dtype=np.float64)
-        self._data = data
+        self._external_node_data = ext_node_data
 
     @property
     def type(self):
@@ -68,8 +68,8 @@ class JYULatticeProxy(ABCLattice):
         rev_ti = tuple(ti[::-1])
 
         node = LatticeNode(ti)
-        for key in self._data:
-            node.data[key] = self._data[key][rev_ti]
+        for key in self._external_node_data:
+            node.data[key] = self._external_node_data[key][rev_ti]
 
         return node
 
@@ -86,9 +86,9 @@ class JYULatticeProxy(ABCLattice):
         ind = lat_node.index
         rev_ind = tuple(ind[::-1])
 
-        for key in self._data:
+        for key in self._external_node_data:
             if key in lat_node.data:
-                self._data[key][rev_ind] = lat_node.data[key]
+                self._external_node_data[key][rev_ind] = lat_node.data[key]
 
     def iter_nodes(self, indices=None):
         """Get an iterator over the LatticeNodes described by the indices.

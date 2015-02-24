@@ -38,11 +38,11 @@ class JYULatticeProxyTestCase(unittest.TestCase):
         vel_arr = np.zeros((nz, ny, nx, 3), dtype=np.float64)
         frc_arr = np.zeros((nz, ny, nx, 3), dtype=np.float64)
 
-        self.data = {}
-        self.data[CUBA.MATERIAL_ID] = geom_arr
-        self.data[CUBA.DENSITY] = den_arr
-        self.data[CUBA.VELOCITY] = vel_arr
-        self.data[CUBA.FORCE] = frc_arr
+        self.ext_ndata = {}
+        self.ext_ndata[CUBA.MATERIAL_ID] = geom_arr
+        self.ext_ndata[CUBA.DENSITY] = den_arr
+        self.ext_ndata[CUBA.VELOCITY] = vel_arr
+        self.ext_ndata[CUBA.FORCE] = frc_arr
 
     def tearDown(self):
         pass
@@ -50,13 +50,13 @@ class JYULatticeProxyTestCase(unittest.TestCase):
     def test_construct_lattice(self):
         """Construction of a lattice."""
         lat = JYULatticeProxy(self.name, self.type, self.bvec, self.size,
-                              self.orig, self.data)
+                              self.orig, self.ext_ndata)
 
         self.assertIsInstance(lat, ABCLattice, "Error: not a ABCLattice!")
 
         self.assertEqual(lat.name, self.name)
         self.assertEqual(lat.type, self.type)
-        self.assertEqual(lat._data, self.data)
+        self.assertEqual(lat._external_node_data, self.ext_ndata)
         np_test.assert_array_equal(lat.size, self.size)
         np_test.assert_array_equal(lat.origin, self.orig)
         np_test.assert_array_equal(lat.base_vect, self.bvec)
@@ -64,7 +64,7 @@ class JYULatticeProxyTestCase(unittest.TestCase):
     def test_set_get_iter_lattice_nodes(self):
         """Creation of lattices using the factory functions."""
         lat = JYULatticeProxy(self.name, self.type, self.bvec, self.size,
-                              self.orig, self.data)
+                              self.orig, self.ext_ndata)
 
         SOLID = 1
         FLUID = 255
@@ -81,7 +81,7 @@ class JYULatticeProxyTestCase(unittest.TestCase):
                 node.data[CUBA.MATERIAL_ID] = FLUID
             lat.update_node(node)
 
-        np_test.assert_array_equal(self.data[CUBA.MATERIAL_ID], geom2)
+        np_test.assert_array_equal(self.ext_ndata[CUBA.MATERIAL_ID], geom2)
 
         for node in lat.iter_nodes():
             if node.data[CUBA.MATERIAL_ID] == FLUID:
@@ -89,7 +89,7 @@ class JYULatticeProxyTestCase(unittest.TestCase):
                 node.data[CUBA.DENSITY] = 1.0
             lat.update_node(node)
 
-        self.assertEqual(self.data[CUBA.DENSITY].sum(),
+        self.assertEqual(self.ext_ndata[CUBA.DENSITY].sum(),
                          self.nz*self.ny*(self.nx-2))
 
         for node in lat.iter_nodes(np.ndindex(7, 6, 5)):
@@ -101,9 +101,9 @@ class JYULatticeProxyTestCase(unittest.TestCase):
         node.data[CUBA.FORCE] = (-3, -2, -1)
         lat.update_node(node)
 
-        self.assertEqual(self.data[CUBA.FORCE][:, :, :, 0].sum(), -3)
-        self.assertEqual(self.data[CUBA.FORCE][:, :, :, 1].sum(), -2)
-        self.assertEqual(self.data[CUBA.FORCE][:, :, :, 2].sum(), -1)
+        self.assertEqual(self.ext_ndata[CUBA.FORCE][:, :, :, 0].sum(), -3)
+        self.assertEqual(self.ext_ndata[CUBA.FORCE][:, :, :, 1].sum(), -2)
+        self.assertEqual(self.ext_ndata[CUBA.FORCE][:, :, :, 2].sum(), -1)
 
 if __name__ == '__main__':
     unittest.main()
