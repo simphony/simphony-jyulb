@@ -44,9 +44,6 @@ class JYULatticeProxyTestCase(unittest.TestCase):
         self.ext_ndata[CUBA.VELOCITY] = vel_arr
         self.ext_ndata[CUBA.FORCE] = frc_arr
 
-    def tearDown(self):
-        pass
-
     def test_construct_lattice(self):
         """Construction of a lattice."""
         lat = JYULatticeProxy(self.name, self.type, self.bvec, self.size,

@@ -64,8 +64,8 @@ class JYULatticeProxy(ABCLattice):
         """
         # JYU-LB modeling engines assume a specific memory order;
         # the indexes must be reversed in a data access
-        ti = tuple(index)
-        rev_ti = tuple(ti[::-1])
+        ti = index
+        rev_ti = ti[::-1]
 
         node = LatticeNode(ti)
         for key in self._external_node_data:
@@ -84,7 +84,7 @@ class JYULatticeProxy(ABCLattice):
         # JYU-LB modeling engines assume a specific memory order;
         # the indexes must be reversed in a data access
         ind = lat_node.index
-        rev_ind = tuple(ind[::-1])
+        rev_ind = ind[::-1]
 
         for key in self._external_node_data:
             if key in lat_node.data:

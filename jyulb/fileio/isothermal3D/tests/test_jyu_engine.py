@@ -32,9 +32,6 @@ class JYUEngineTestCase(unittest.TestCase):
         self.channel_h = 0.5*(self.nx-2.0)
         self.max_vel = 0.5*self.gz*self.channel_h*self.channel_h/self.kvisc
 
-    def tearDown(self):
-        pass
-
     def test_run_engine(self):
         """Running the jyu-lb modeling engine."""
         engine = JYUEngine()
