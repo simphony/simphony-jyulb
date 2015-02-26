@@ -1,5 +1,5 @@
 #!/bin/bash
-# install JYU-LB modeling engine
+# install JYU-LB
 git clone https://github.com/simphony/JYU-LB.git
 cd JYU-LB
 make
