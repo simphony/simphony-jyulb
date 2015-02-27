@@ -11,7 +11,7 @@ class TestPluginIntegration(unittest.TestCase):
         from simphony.engine import jyulb
 
         # Check that the expected top level objects are available
-        self.assertTrue(hasattr(jyulb, 'JYUEngine'))
+        self.assertTrue(hasattr(jyulb, 'jyu_engine'))
 
 
 if __name__ == '__main__':
