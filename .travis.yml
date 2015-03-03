@@ -2,7 +2,7 @@ language: python
 
 install:
   - pip install -r requirements.txt
-  - sudo ./install_jyulb.sh
+  - ./install_external.sh
   - python setup.py develop
 
 script: python -m unittest discover
