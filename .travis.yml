@@ -2,7 +2,6 @@ language: python
 
 install:
   - pip install -r requirements.txt
-  - chmod +x install_jyulb.sh
   - sudo ./install_jyulb.sh
   - python setup.py develop
 
