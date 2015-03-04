@@ -3,6 +3,7 @@ language: python
 install:
   - pip install -r requirements.txt
   - ./install_external.sh
+  - pip install coveralls
   - python setup.py develop
 
 script:
