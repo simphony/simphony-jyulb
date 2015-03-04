@@ -2,7 +2,6 @@
 branch = True
 source = jyulb
 omit = */tests/*
-       */bench/*    
 
 [report]
 # Regexes for lines to exclude from consideration
