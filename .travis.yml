@@ -1,8 +1,15 @@
 language: python
 
 install:
-  - pip install -r requirements.txt
+  - pip install -r dev_requirements.txt
   - ./install_external.sh
+  - pip install coveralls
   - python setup.py develop
 
-script: python -m unittest discover
+script:
+  - flake8 .
+  - coverage run -m unittest discover
+  - coverage report
+  
+after_success:
+  - coveralls
