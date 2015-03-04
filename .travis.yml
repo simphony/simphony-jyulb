@@ -5,4 +5,10 @@ install:
   - ./install_external.sh
   - python setup.py develop
 
-script: python -m unittest discover
+script:
+  - flake8 .
+  - coverage run -m unittest discover
+  - coverage report
+  
+after_success:
+  - coveralls
