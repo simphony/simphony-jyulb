@@ -3,5 +3,4 @@
 git clone https://github.com/simphony/JYU-LB.git
 cd JYU-LB
 make
-cd ..
-ln -s /usr/local/bin/jyu_lb_isothermal3D.exe ./JYU-LB/bin/jyu_lb_isothermal3D.exe
+ln -s /usr/local/bin/jyu_lb_isothermal3D.exe bin/jyu_lb_isothermal3D.exe
