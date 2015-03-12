@@ -2,7 +2,7 @@ language: python
 
 install:
   - pip install -r dev_requirements.txt
-  - ./install_external.sh
+  - sudo ./install_external.sh
   - pip install coveralls
   - python setup.py develop
 

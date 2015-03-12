@@ -108,7 +108,7 @@ class JYUEngine(ABCModelingEngine):
         self._write_input_script(input_script_fname)
 
         # Run the modeling engine
-        run_command = './jyu_lb_isothermal3D.exe ' + input_script_fname
+        run_command = 'jyu_lb_isothermal3D.exe ' + input_script_fname
 
         p = subprocess.Popen(run_command, shell=True,
                              stdout=subprocess.PIPE,
