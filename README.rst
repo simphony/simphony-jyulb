@@ -18,7 +18,7 @@ simphony-jyulb is hosted on github: https://github.com/simphony/simphony-jyulb
 
 Requirements
 ------------
- - `simphony-common`_ >= 0.0.1 
+ - `simphony-common`_ >= 0.1.1 
 
 .. _simphony-common: https://github.com/simphony/simphony-common
 
