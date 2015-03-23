@@ -1,5 +1,8 @@
 """Testing module for a file-io based wrapper for JYU-LB modeling engine."""
 import math
+import os
+import tempfile
+import shutil
 import unittest
 from simphony.core.cuba import CUBA
 from simphony.cuds.lattice import make_cubic_lattice
@@ -31,6 +34,15 @@ class JYUEngineTestCase(unittest.TestCase):
 
         self.channel_h = 0.5*(self.nx-2.0)
         self.max_vel = 0.5*self.gz*self.channel_h*self.channel_h/self.kvisc
+
+        self.temp_dir = tempfile.mkdtemp()
+        self.saved_path = os.getcwd()
+        os.chdir(self.temp_dir)
+        self.addCleanup(self.cleanup)
+
+    def cleanup(self):
+        os.chdir(self.saved_path)
+        shutil.rmtree(self.temp_dir)
 
     def test_run_engine(self):
         """Running the jyu-lb modeling engine."""
