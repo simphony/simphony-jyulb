@@ -1,3 +1,4 @@
+from simphony.core.data_container import DataContainer
 from simphony.cuds.abstractlattice import ABCLattice
 from simphony.cuds.lattice import LatticeNode
 import numpy as np
@@ -12,7 +13,7 @@ class JYULatticeProxy(ABCLattice):
     Acknowledges only those CUBA keywords which are prescribed at the
     initialization.
 
-    Parameters
+    Attributes
     ----------
     name : str
     type : str
@@ -22,6 +23,8 @@ class JYULatticeProxy(ABCLattice):
     size : tuple of D x size
         number of lattice nodes (in the direction of each axis).
     origin : D x float
+    data : DataContainer
+        high level CUBA data assigned to lattice
     external_node_data : dictionary
         references (value) to external data storages (multidimensional
         arrays) for each prescribed CUBA keyword (key)
@@ -33,6 +36,7 @@ class JYULatticeProxy(ABCLattice):
         self._base_vect = np.array(base_vect, dtype=np.float64)
         self._size = tuple(size)
         self._origin = np.array(origin, dtype=np.float64)
+        self._data = DataContainer()
         self._external_node_data = ext_node_data
 
     @property
@@ -51,6 +55,14 @@ class JYULatticeProxy(ABCLattice):
     def origin(self):
         return self._origin
 
+    @property
+    def data(self):
+        return DataContainer(self._data)
+
+    @data.setter
+    def data(self, value):
+        self._data = DataContainer(value)
+
     def get_node(self, index):
         """Get a copy of the node corresponding to the given index.
 
@@ -61,11 +73,19 @@ class JYULatticeProxy(ABCLattice):
         Returns
         -------
         A reference to a LatticeNode object
+
+        Raises
+        ------
+        IndexError
+           if the given index includes negative components.
         """
         # JYU-LB modeling engines assume a specific memory order;
         # the indexes must be reversed in a data access
         ti = index
         rev_ti = ti[::-1]
+
+        if any(value < 0 for value in rev_ti):
+            raise IndexError('invalid index: {}'.format(rev_ti))
 
         node = LatticeNode(ti)
         for key in self._external_node_data:
@@ -80,11 +100,19 @@ class JYULatticeProxy(ABCLattice):
         ----------
         lat_node : reference to a LatticeNode object
             data copied from the given node
+
+        Raises
+        ------
+        IndexError
+           if the index of the given node includes negative components.
         """
         # JYU-LB modeling engines assume a specific memory order;
         # the indexes must be reversed in a data access
         ind = lat_node.index
         rev_ind = ind[::-1]
+
+        if any(value < 0 for value in rev_ind):
+            raise IndexError('invalid index: {}'.format(rev_ind))
 
         for key in self._external_node_data:
             if key in lat_node.data:
@@ -119,5 +147,14 @@ class JYULatticeProxy(ABCLattice):
         Returns
         -------
         D x float
+
+        Raises
+        ------
+        NotImplementedError
+           if the lattice type is 'Hexagonal'.
         """
+        if self._type == 'Hexagonal':
+            raise NotImplementedError("""Get_coordinate for
+                Hexagonal system not implemented!""")
+
         return self.origin + self.base_vect*np.array(index)
