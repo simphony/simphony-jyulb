@@ -53,12 +53,9 @@ class JYUEngine(ABCModelingEngine):
         # Definition of CM, SP, BC, and SD data components
         self._data = {}
         self._lattice = None
-#        self.CM = DataContainer()
-#        self.SP = DataContainer()
-#        self.BC = DataContainer()
         self.CM = {}
         self.SP = {}
-        self.BC = {}
+        self.BC = DataContainer()
 
         # Default Computational Method data
         self.CM[CUBAExtension.COLLISION_OPERATOR] = JYUEngine.TRT_ENUM
