@@ -3,6 +3,8 @@ import unittest
 import numpy as np
 import numpy.testing as np_test
 from simphony.core.cuba import CUBA
+from simphony.core.data_container import DataContainer
+from simphony.cuds.lattice import LatticeNode
 from simphony.cuds.abstractlattice import ABCLattice
 from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
 
@@ -33,6 +35,9 @@ class JYULatticeProxyTestCase(unittest.TestCase):
         self.size = (nx, ny, nz)
         self.orig = (ox, oy, oz)
 
+        self.data = DataContainer()
+        self.data[CUBA.STATUS] = 0
+
         geom_arr = np.zeros((nz, ny, nx), dtype=np.uint8)
         den_arr = np.zeros((nz, ny, nx), dtype=np.float64)
         vel_arr = np.zeros((nz, ny, nx, 3), dtype=np.float64)
@@ -48,15 +53,32 @@ class JYULatticeProxyTestCase(unittest.TestCase):
         """Construction of a lattice."""
         lat = JYULatticeProxy(self.name, self.type, self.bvec, self.size,
                               self.orig, self.ext_ndata)
+        lat.data = self.data
 
         self.assertIsInstance(lat, ABCLattice, "Error: not a ABCLattice!")
 
         self.assertEqual(lat.name, self.name)
         self.assertEqual(lat.type, self.type)
         self.assertEqual(lat._external_node_data, self.ext_ndata)
+        self.assertEqual(lat.data, self.data)
         np_test.assert_array_equal(lat.size, self.size)
         np_test.assert_array_equal(lat.origin, self.orig)
         np_test.assert_array_equal(lat.base_vect, self.bvec)
+
+        try:
+            lat.get_node((-1, 0, 0))
+        except IndexError:
+            pass
+        else:
+            raise AssertionError('Negative indices incorrectly accepted.')
+
+        test_node = LatticeNode((0, -1, 0))
+        try:
+            lat.update_node(test_node)
+        except IndexError:
+            pass
+        else:
+            raise AssertionError('Negative indices incorrectly accepted.')
 
     def test_set_get_iter_lattice_nodes(self):
         """Creation of lattices using the factory functions."""
