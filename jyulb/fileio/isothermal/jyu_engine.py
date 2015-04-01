@@ -1,6 +1,7 @@
 from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.core.data_container import DataContainer
+from jyulb.cuba_extension import CUBAExtension
 from simphony.core.cuba import CUBA
 import numpy as np
 import subprocess
@@ -52,22 +53,25 @@ class JYUEngine(ABCModelingEngine):
         # Definition of CM, SP, BC, and SD data components
         self._data = {}
         self._lattice = None
-        self.CM = DataContainer()
-        self.SP = DataContainer()
-        self.BC = DataContainer()
+#        self.CM = DataContainer()
+#        self.SP = DataContainer()
+#        self.BC = DataContainer()
+        self.CM = {}
+        self.SP = {}
+        self.BC = {}
 
         # Default Computational Method data
-        self.CM_CUBA_COLLISION_OPERATOR = JYUEngine.TRT_ENUM
+        self.CM[CUBAExtension.COLLISION_OPERATOR] = JYUEngine.TRT_ENUM
         self.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10000
         self.CM[CUBA.TIME_STEP] = 1.0
         self.base_fname = 'jyu_engine'
 
         # Default System Parameters data
         self.SP[CUBA.KINEMATIC_VISCOSITY] = 0.1
-        self.SP_CUBA_REFERENCE_DENSITY = 1.0
-        self.SP_CUBA_GRAVITY = (0.0, 0.0, 0.0)
-        self.SP_CUBA_FLOW_TYPE = JYUEngine.STOKES_FLOW_ENUM
-        self.SP_CUBA_EXTERNAL_FORCING = False
+        self.SP[CUBAExtension.REFERENCE_DENSITY] = 1.0
+        self.SP[CUBAExtension.GRAVITY] = (0.0, 0.0, 0.0)
+        self.SP[CUBAExtension.FLOW_TYPE] = JYUEngine.STOKES_FLOW_ENUM
+        self.SP[CUBAExtension.EXTERNAL_FORCING] = False
 
         # Default Boundary Condition data
         self.BC[CUBA.VELOCITY] = {'open': 'periodic',
@@ -103,7 +107,7 @@ class JYUEngine(ABCModelingEngine):
         self._data[CUBA.MATERIAL_ID].tofile(geom_write_fname)
         self._data[CUBA.DENSITY].tofile(den_write_fname)
         self._data[CUBA.VELOCITY].tofile(vel_write_fname)
-        if self.SP_CUBA_EXTERNAL_FORCING:
+        if self.SP[CUBAExtension.EXTERNAL_FORCING]:
             self._data[CUBA.FORCE].tofile(frc_write_fname)
         self._write_input_script(input_script_fname)
 
@@ -143,7 +147,7 @@ class JYUEngine(ABCModelingEngine):
         os.remove(vel_write_fname)
         os.remove(den_read_fname)
         os.remove(vel_read_fname)
-        if self.SP_CUBA_EXTERNAL_FORCING:
+        if self.SP[CUBAExtension.EXTERNAL_FORCING]:
             os.remove(frc_write_fname)
 
     def add_lattice(self, lattice):
@@ -430,22 +434,22 @@ class JYUEngine(ABCModelingEngine):
         f.write('# Discrete time step\n')
         f.write('%e\n' % self.CM[CUBA.TIME_STEP])
         f.write('# Reference density\n')
-        f.write('%e\n' % self.SP_CUBA_REFERENCE_DENSITY)
+        f.write('%e\n' % self.SP[CUBAExtension.REFERENCE_DENSITY])
         f.write('# Kinematic viscosity\n')
         f.write('%e\n' % self.SP[CUBA.KINEMATIC_VISCOSITY])
         f.write('# Gravity (gx gy gz)\n')
-        f.write('%e %e %e\n' % self.SP_CUBA_GRAVITY)
+        f.write('%e %e %e\n' % self.SP[CUBAExtension.GRAVITY])
 
         f.write('# Additional external forcing (No=0, Yes=1)\n')
-        if self.SP_CUBA_EXTERNAL_FORCING:
+        if self.SP[CUBAExtension.EXTERNAL_FORCING]:
             f.write('1\n')
         else:
             f.write('0\n')
 
         f.write('# Flow type (Stokes=0, Laminar=1, Turbulent=2)\n')
-        f.write('%d\n' % self.SP_CUBA_FLOW_TYPE)
+        f.write('%d\n' % self.SP[CUBAExtension.FLOW_TYPE])
         f.write('# Collision operator (BGK=0, TRT=1, MRT=2, Regul.=3)\n')
-        f.write('%d\n' % self.CM_CUBA_COLLISION_OPERATOR)
+        f.write('%d\n' % self.CM[CUBAExtension.COLLISION_OPERATOR])
         f.write('# Number of discrete time steps\n')
         f.write('%d\n' % self.CM[CUBA.NUMBER_OF_TIME_STEPS])
 
