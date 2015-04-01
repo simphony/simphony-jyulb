@@ -8,5 +8,5 @@ setup(
     packages=find_packages(),
     install_requires=['simphony'],
     entry_points={
-        'simphony.engine': ['jyulb = jyulb.fileio.isothermal3D']
+        'simphony.engine': ['jyulb = jyulb.fileio.isothermal']
     })

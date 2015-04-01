@@ -49,7 +49,7 @@ This engine-wrapper uses JYU-LB fluid flow simulator.
 
 The JYU-LB source code is available on github: https://github.com/simphony/JYU-LB
 
-The engine wrapper assumes that there is an executable called "jyu_lb_isothermal3D.exe"
+The engine wrapper assumes that there is an executable called "jyu_lb_isothermal.exe"
 that can be found in the PATH and an exception is thrown if this is not the case.  
 
 Testing
