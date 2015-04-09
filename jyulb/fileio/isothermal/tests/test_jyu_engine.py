@@ -5,8 +5,9 @@ import tempfile
 import shutil
 import unittest
 from simphony.core.cuba import CUBA
+from jyulb.cuba_extension import CUBAExtension
 from simphony.cuds.lattice import make_cubic_lattice
-from jyulb.fileio.isothermal3D.jyu_engine import JYUEngine
+from jyulb.fileio.isothermal.jyu_engine import JYUEngine
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 
 
@@ -52,16 +53,16 @@ class JYUEngineTestCase(unittest.TestCase):
                               "Error: not a ABCModelingEngine!")
 
         # Computational Method data
-        engine.CM_CUBA_COLLISION_OPERATOR = self.coll_oper
+        engine.CM[CUBAExtension.COLLISION_OPERATOR] = self.coll_oper
         engine.CM[CUBA.TIME_STEP] = self.dt
         engine.CM[CUBA.NUMBER_OF_TIME_STEPS] = self.tsteps
 
         # System Parameters data
-        engine.SP_CUBA_REFERENCE_DENSITY = self.rden
+        engine.SP[CUBAExtension.REFERENCE_DENSITY] = self.rden
         engine.SP[CUBA.KINEMATIC_VISCOSITY] = self.kvisc
-        engine.SP_CUBA_GRAVITY = (self.gx, self.gy, self.gz)
-        engine.SP_CUBA_FLOW_TYPE = self.flow_type
-        engine.SP_CUBA_EXTERNAL_FORCING = self.ext_frc
+        engine.SP[CUBAExtension.GRAVITY] = (self.gx, self.gy, self.gz)
+        engine.SP[CUBAExtension.FLOW_TYPE] = self.flow_type
+        engine.SP[CUBAExtension.EXTERNAL_FORCING] = self.ext_frc
 
         # Boundary Conditions data
         engine.BC[CUBA.VELOCITY] = {'open': 'periodic',
