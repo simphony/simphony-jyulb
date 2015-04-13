@@ -15,7 +15,7 @@ setup(ext_modules=cythonize(Extension(
                   'JYU-LB/include/collision/',
                   'JYU-LB/include/kernel/',
                   'JYU-LB/include/solver/',
-                  numpy.get_include()],             
+                  numpy.get_include()],
     extra_compile_args=['-fopenmp', '-O3'],           # compiler flags
     extra_link_args=['-fopenmp', '-O3'],              # linker flags
     language="c++",                                   # C++ code

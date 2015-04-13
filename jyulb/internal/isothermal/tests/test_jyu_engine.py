@@ -1,4 +1,5 @@
 """Testing module for a file-io based wrapper for JYU-LB modeling engine."""
+import time
 import math
 import os
 import tempfile
@@ -95,7 +96,13 @@ class JYUEngineTestCase(unittest.TestCase):
         engine.add_lattice(lat)
 
         # Run the case
+        start_time = time.time()
+
         engine.run()
+
+        end_time = time.time()
+        comp_time = end_time - start_time
+        MFLUP = (self.nx-2)*self.ny*self.nz*self.tsteps/1e6
 
         # Analyse the results
         proxy_lat = engine.get_lattice(lat.name)
@@ -118,7 +125,9 @@ class JYUEngineTestCase(unittest.TestCase):
                 tot_uy = tot_uy + sim_uy
 
         rel_l2_error = math.sqrt(tot_diff2/tot_ana2)
-        print ('Relative L2-error norm = %e\n' % (rel_l2_error))
+        print ('\nRelative L2-error norm = %e' % (rel_l2_error))
+        print 'Comp.time (s) = {}, MFLUPS = {}'.format(comp_time,
+                                                       MFLUP/comp_time)
 
         self.assertTrue(rel_l2_error < 1.0e-10)
         self.assertTrue(math.fabs(tot_ux) < 1.0e-10)
