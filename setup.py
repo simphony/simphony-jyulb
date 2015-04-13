@@ -1,8 +1,14 @@
 from setuptools import setup, find_packages
 import os
 
-os.system("python domain_setup.py build_ext --build-lib=jyulb/internal/common/")
-os.system("python solver_setup.py build_ext --build-lib=jyulb/internal/isothermal/")
+cmmnd1 = "python domain_setup.py build_ext " \
+         "--build-lib=jyulb/internal/common/"
+
+cmmnd2 = "python solver_setup.py build_ext " \
+         "--build-lib=jyulb/internal/isothermal/"
+
+os.system(cmmnd1)
+os.system(cmmnd2)
 
 setup(
     name='jyu_engine',

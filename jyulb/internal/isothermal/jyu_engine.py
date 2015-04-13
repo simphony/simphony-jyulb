@@ -1,4 +1,4 @@
-import solver
+from jyulb.internal.isothermal import solver
 from jyulb.internal.common.proxy_lattice import ProxyLattice
 from jyulb.internal.common.domain import PyLattice, PyGeometry
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
@@ -34,7 +34,7 @@ class JYUEngine(ABCModelingEngine):
         kinematic viscosity, reference density, gravity, flow type, and
         enforcement of external forcing.
     """
-    
+
     # Enumeration of some values for the configuration parameters
     STOKES_FLOW_ENUM = solver.STOKES_FLOW_ENUM
     LAMINAR_FLOW_ENUM = solver.LAMINAR_FLOW_ENUM
@@ -44,7 +44,7 @@ class JYUEngine(ABCModelingEngine):
     TRT_ENUM = solver.TRT_ENUM
     MRT_ENUM = solver.MRT_ENUM
     REG_ENUM = solver.REG_ENUM
-        
+
     def __init__(self):
         """Initialize and set default parameters for CM, BC, SP, and SD."""
         # Definition of CM, SP, BC, and SD data components

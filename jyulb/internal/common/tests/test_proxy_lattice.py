@@ -35,7 +35,7 @@ class ProxyLatticeTestCase(unittest.TestCase):
         for index in np.ndindex(tuple(self.size)):
             if index[0] > 0 and index[0] < self.nx-1:
                 ijk = np.array(index, dtype=np.uint32)
-                self.geom.set_material_ijk(ijk, ProxyLattice.FLUID_ENUM)
+                self.geom.set_material_ijk(ijk, ProxyLattice.FLUID)
 
         ivel = np.array((0.0, 0.0, 0.0), dtype=np.float64)
         ifrc = np.array((0.0, 0.0, 0.0), dtype=np.float64)
@@ -99,7 +99,7 @@ class ProxyLatticeTestCase(unittest.TestCase):
         check_sum = (self.nx-2)*self.ny*self.nz
 
         for node in proxy.iter_nodes():
-            if node.data[CUBA.MATERIAL_ID] == ProxyLattice.FLUID_ENUM:
+            if node.data[CUBA.MATERIAL_ID] == ProxyLattice.FLUID:
                 check_iden = check_iden + node.data[CUBA.DENSITY]
                 check_ivelx = check_ivelx + node.data[CUBA.VELOCITY][0]
                 check_ively = check_ively + node.data[CUBA.VELOCITY][1]
