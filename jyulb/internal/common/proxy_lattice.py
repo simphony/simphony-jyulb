@@ -3,7 +3,7 @@ from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.abstractlattice import ABCLattice
 from simphony.cuds.lattice import LatticeNode
-from jyulb.internal.common.domain import SOLID_ENUM, FLUID_ENUM
+from jyulb.internal.common import domain
 
 
 class ProxyLattice(ABCLattice):
@@ -35,8 +35,8 @@ class ProxyLattice(ABCLattice):
     """
 
     # Enumeration of material IDs
-    SOLID = SOLID_ENUM
-    FLUID = FLUID_ENUM
+    SOLID_ENUM = domain.SOLID_ENUM
+    FLUID_ENUM = domain.FLUID_ENUM
 
     def __init__(self, name, type, base_vect, geom, fdata):
         self.name = name
@@ -103,7 +103,7 @@ class ProxyLattice(ABCLattice):
         ijk = np.array(index, dtype=np.uint32)
         node.data[CUBA.MATERIAL_ID] = self._geom.get_material_ijk(ijk)
 
-        if node.data[CUBA.MATERIAL_ID] == ProxyLattice.FLUID:
+        if node.data[CUBA.MATERIAL_ID] == ProxyLattice.FLUID_ENUM:
             vel = np.zeros(3, dtype=np.float64)
             frc = np.zeros(3, dtype=np.float64)
             self._fdata.get_vel_ijk(ijk, vel)
@@ -133,7 +133,7 @@ class ProxyLattice(ABCLattice):
 
         ijk = np.array(node.index, dtype=np.uint32)
 
-        if self._geom.get_material_ijk(ijk) == ProxyLattice.FLUID:
+        if self._geom.get_material_ijk(ijk) == ProxyLattice.FLUID_ENUM:
             if CUBA.DENSITY in node.data:
                 self._fdata.set_den_ijk(ijk, node.data[CUBA.DENSITY])
             if CUBA.VELOCITY in node.data:
