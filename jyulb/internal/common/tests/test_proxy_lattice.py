@@ -59,20 +59,12 @@ class ProxyLatticeTestCase(unittest.TestCase):
         np_test.assert_array_equal(proxy.origin, self.orig)
         np_test.assert_array_equal(proxy.base_vect, self.bvec)
 
-        try:
+        with self.assertRaises(IndexError):
             proxy.get_node((-1, 0, 0))
-        except IndexError:
-            pass
-        else:
-            raise AssertionError('Negative indices incorrectly accepted.')
 
         test_node = LatticeNode((0, -1, 0))
-        try:
+        with self.assertRaises(IndexError):
             proxy.update_node(test_node)
-        except IndexError:
-            pass
-        else:
-            raise AssertionError('Negative indices incorrectly accepted.')
 
     def test_set_get_iter_lattice_nodes(self):
         """Creation of lattices using the factory functions."""
