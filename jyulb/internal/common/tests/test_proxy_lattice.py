@@ -111,10 +111,9 @@ class ProxyLatticeTestCase(unittest.TestCase):
         # Iterated nodes belong to the solid phase (channel walls)
         # and should not have data related to the given CUBA keywords
         for node in proxy.iter_nodes(np.ndindex(1, self.ny, self.nz)):
-            with self.assertRaises(KeyError):
-                node.data[CUBA.DENSITY]
-                node.data[CUBA.VELOCITY]
-                node.data[CUBA.FORCE]
+            data = node.data
+            for key in (CUBA.DENSITY, CUBA.VELOCITY, CUBA.FORCE):
+                self.assertNotIn(key, data)
 
         np_test.assert_array_equal((1*self.h, 2*self.h, 3*self.h),
                                    proxy.get_coordinate((1, 2, 3)))
