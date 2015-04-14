@@ -7,7 +7,7 @@ import unittest
 from simphony.core.cuba import CUBA
 from jyulb.cuba_extension import CUBAExtension
 from simphony.cuds.lattice import make_cubic_lattice
-from jyulb.fileio.isothermal.jyu_engine import JYUEngine
+from simphony.engine import jyulb_fileio_isothermal as lb
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 
 
@@ -21,7 +21,7 @@ class JYUEngineTestCase(unittest.TestCase):
         self.ny = 5
         self.nz = 20
 
-        self.coll_oper = JYUEngine.TRT_ENUM
+        self.coll_oper = lb.JYUEngine.TRT_ENUM
         self.dt = 1.0
         self.tsteps = 10000
 
@@ -30,7 +30,7 @@ class JYUEngineTestCase(unittest.TestCase):
         self.gz = 1.0e-5
         self.kvisc = 0.1
         self.rden = 1.0
-        self.flow_type = JYUEngine.STOKES_FLOW_ENUM
+        self.flow_type = lb.JYUEngine.STOKES_FLOW_ENUM
         self.ext_frc = False
 
         self.channel_h = 0.5*(self.nx-2.0)
@@ -47,7 +47,7 @@ class JYUEngineTestCase(unittest.TestCase):
 
     def test_run_engine(self):
         """Running the jyu-lb modeling engine."""
-        engine = JYUEngine()
+        engine = lb.JYUEngine()
 
         self.assertIsInstance(engine, ABCModelingEngine,
                               "Error: not a ABCModelingEngine!")
