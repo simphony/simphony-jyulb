@@ -9,6 +9,7 @@ from jyulb.cuba_extension import CUBAExtension
 from simphony.cuds.lattice import make_cubic_lattice
 from simphony.engine import jyulb_fileio_isothermal as lb
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
+from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
 
 
 class JYUEngineTestCase(unittest.TestCase):
@@ -78,14 +79,14 @@ class JYUEngineTestCase(unittest.TestCase):
         # Set geometry for a Poiseuille channel
         for node in lat.iter_nodes():
             if node.index[0] == 0 or node.index[0] == self.nx-1:
-                node.data[CUBA.MATERIAL_ID] = engine.SOLID_ENUM
+                node.data[CUBA.MATERIAL_ID] = JYULatticeProxy.SOLID_ENUM
             else:
-                node.data[CUBA.MATERIAL_ID] = engine.FLUID_ENUM
+                node.data[CUBA.MATERIAL_ID] = JYULatticeProxy.FLUID_ENUM
             lat.update_node(node)
 
         # Initialize flow variables at fluid lattice nodes
         for node in lat.iter_nodes():
-            if node.data[CUBA.MATERIAL_ID] == engine.FLUID_ENUM:
+            if node.data[CUBA.MATERIAL_ID] == JYULatticeProxy.FLUID_ENUM:
                 node.data[CUBA.VELOCITY] = (0, 0, 0)
                 node.data[CUBA.DENSITY] = 1.0
             lat.update_node(node)
@@ -105,7 +106,7 @@ class JYUEngineTestCase(unittest.TestCase):
         tot_ux = 0.0
         tot_uy = 0.0
         for node in proxy_lat.iter_nodes():
-            if node.data[CUBA.MATERIAL_ID] == engine.FLUID_ENUM:
+            if node.data[CUBA.MATERIAL_ID] == JYULatticeProxy.FLUID_ENUM:
                 sim_ux = node.data[CUBA.VELOCITY][0]
                 sim_uy = node.data[CUBA.VELOCITY][1]
                 sim_uz = node.data[CUBA.VELOCITY][2]

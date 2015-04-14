@@ -13,6 +13,8 @@ class JYULatticeProxy(ABCLattice):
     Acknowledges only those CUBA keywords which are prescribed at the
     initialization.
 
+    Enumeration of MATERIAL ID values for SOLID and FLUID lattice nodes.
+
     Attributes
     ----------
     name : str
@@ -29,6 +31,10 @@ class JYULatticeProxy(ABCLattice):
         references (value) to external data storages (multidimensional
         arrays) for each prescribed CUBA keyword (key)
     """
+
+    # Enumeration of material IDs
+    SOLID_ENUM = 0
+    FLUID_ENUM = 255
 
     def __init__(self, name, type, base_vect, size, origin, ext_node_data):
         self.name = name

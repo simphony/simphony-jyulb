@@ -18,8 +18,8 @@ class JYUEngine(ABCModelingEngine):
     The following CUBA keywords are acknowledged in lattice node data:
     MATERIAL_ID, DENSITY, VELOCITY, and FORCE.
 
-    Some values for the configuration parameters are enumerated: SOLID/FLUID
-    for MATERIAL_ID, STOKES_FLOW/LAMINAR_FLOW/TURBULENT_FLOW for FLOW_TYPE,
+    Some values for the configuration parameters are enumerated:
+    STOKES_FLOW/LAMINAR_FLOW/TURBULENT_FLOW for FLOW_TYPE,
     and BGK/TRT/MRT/REG for COLLISION_OPERATOR.
 
     Attributes
@@ -36,9 +36,6 @@ class JYUEngine(ABCModelingEngine):
     """
 
     # Enumeration of some values for the configuration parameters
-    SOLID_ENUM = 0
-    FLUID_ENUM = 255
-
     STOKES_FLOW_ENUM = 0
     LAMINAR_FLOW_ENUM = 1
     TURBULENT_FLOW_ENUM = 2
