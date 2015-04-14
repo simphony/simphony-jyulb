@@ -41,7 +41,8 @@ class ProxyLattice(ABCLattice):
     def __init__(self, name, type, base_vect, geom, fdata):
         self.name = name
         self._type = type
-        self._base_vect = np.array(base_vect, dtype=np.float64)
+        self._base_vect = np.zeros(3, dtype=np.float64)
+        self._base_vect[0:len(base_vect)] = base_vect[:]
         self._data = DataContainer()
 
         self._geom = geom

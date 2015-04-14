@@ -1,6 +1,6 @@
 import cython
 import numpy as np
-cimport numpy as np
+cimport numpy as cnp
 from libcpp cimport bool
 from jyulb.internal.common.domain cimport Geometry, IsothermalNodeData, PyGeometry
 

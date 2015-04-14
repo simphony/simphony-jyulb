@@ -1,6 +1,6 @@
 import cython
 import numpy as np
-cimport numpy as np
+cimport numpy as cnp
 from jyulb.internal.common.domain cimport PyAbstractIsothermalData
 
 
@@ -54,12 +54,12 @@ cdef class PyFlowParams:
 
     property gravity:
         def __get__(self):
-            cdef np.ndarray[double, ndim=1, mode="c"] grav = np.empty(3, dtype=np.float64)
+            cdef cnp.ndarray[double, ndim=1, mode="c"] grav = np.empty(3, dtype=np.float64)
             grav[0] = self.vals.gx
             grav[1] = self.vals.gy
             grav[2] = self.vals.gz
             return grav
-        def __set__(self, np.ndarray[double, ndim=1, mode="c"] grav):
+        def __set__(self, cnp.ndarray[double, ndim=1, mode="c"] grav):
             self.vals.gx = grav[0] 
             self.vals.gy = grav[1]
             self.vals.gz = grav[2]

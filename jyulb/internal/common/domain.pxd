@@ -1,6 +1,6 @@
 import cython
 import numpy as np
-cimport numpy as np
+cimport numpy as cnp
 
 
 cdef extern from "const.h":
@@ -78,7 +78,3 @@ cdef class PyGeometry:
     
 cdef class PyAbstractIsothermalData:
     cdef IsothermalNodeData *thisptr
-#    cdef PyNodeSet _nodes
-
-#cdef class PyIsothermalData(PyAbstractIsothermalData):
-      

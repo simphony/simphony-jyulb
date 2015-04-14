@@ -10,7 +10,7 @@ import numpy as np
 
 class JYUEngine(ABCModelingEngine):
 
-    """File-IO wrapper for the JYU-LB Isothermal 3D flow modeling engine.
+    """Internal wrapper for the JYU-LB Isothermal 3D flow modeling engine.
 
     Only a single lattice can be added for configuring the simulation;
     the wrapper does not accept meshes or particle containers.
