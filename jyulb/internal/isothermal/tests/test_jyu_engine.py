@@ -19,13 +19,13 @@ class JYUEngineTestCase(unittest.TestCase):
 
     def setUp(self):
         self.dr = 1.0
-        self.nx = 10
-        self.ny = 5
-        self.nz = 20
+        self.nx = 5
+        self.ny = 3
+        self.nz = 4
 
         self.coll_oper = lb.JYUEngine.TRT_ENUM
         self.dt = 1.0
-        self.tsteps = 10000
+        self.tsteps = 1000
 
         self.gx = 0.0
         self.gy = 0.0

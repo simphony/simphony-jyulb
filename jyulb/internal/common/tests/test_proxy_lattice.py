@@ -10,7 +10,6 @@ from jyulb.internal.common.proxy_lattice import ProxyLattice
 from jyulb.internal.common.domain import PyLattice, PyGeometry
 from jyulb.internal.common.domain import PyIsothermalData
 
-from pympler import muppy, tracker, summary
 
 class ProxyLatticeTestCase(unittest.TestCase):
 
