@@ -1,4 +1,5 @@
-"""Testing module for a file-io based wrapper for JYU-LB modeling engine."""
+"""Testing module for an internal wrapper for JYU-LB modeling engine."""
+import time
 import math
 import os
 import tempfile
@@ -7,9 +8,9 @@ import unittest
 from simphony.core.cuba import CUBA
 from jyulb.cuba_extension import CUBAExtension
 from simphony.cuds.lattice import make_cubic_lattice
-from simphony.engine import jyulb_fileio_isothermal as lb
+from simphony.engine import jyulb_internal_isothermal as lb
+from jyulb.internal.common.proxy_lattice import ProxyLattice
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
 
 
 class JYUEngineTestCase(unittest.TestCase):
@@ -79,14 +80,14 @@ class JYUEngineTestCase(unittest.TestCase):
         # Set geometry for a Poiseuille channel
         for node in lat.iter_nodes():
             if node.index[0] == 0 or node.index[0] == self.nx-1:
-                node.data[CUBA.MATERIAL_ID] = JYULatticeProxy.SOLID_ENUM
+                node.data[CUBA.MATERIAL_ID] = ProxyLattice.SOLID_ENUM
             else:
-                node.data[CUBA.MATERIAL_ID] = JYULatticeProxy.FLUID_ENUM
+                node.data[CUBA.MATERIAL_ID] = ProxyLattice.FLUID_ENUM
             lat.update_node(node)
 
         # Initialize flow variables at fluid lattice nodes
         for node in lat.iter_nodes():
-            if node.data[CUBA.MATERIAL_ID] == JYULatticeProxy.FLUID_ENUM:
+            if node.data[CUBA.MATERIAL_ID] == ProxyLattice.FLUID_ENUM:
                 node.data[CUBA.VELOCITY] = (0, 0, 0)
                 node.data[CUBA.DENSITY] = 1.0
             lat.update_node(node)
@@ -95,7 +96,13 @@ class JYUEngineTestCase(unittest.TestCase):
         engine.add_lattice(lat)
 
         # Run the case
+        start_time = time.time()
+
         engine.run()
+
+        end_time = time.time()
+        comp_time = end_time - start_time
+        MFLUP = (self.nx-2)*self.ny*self.nz*self.tsteps/1e6
 
         # Analyse the results
         proxy_lat = engine.get_lattice(lat.name)
@@ -106,7 +113,7 @@ class JYUEngineTestCase(unittest.TestCase):
         tot_ux = 0.0
         tot_uy = 0.0
         for node in proxy_lat.iter_nodes():
-            if node.data[CUBA.MATERIAL_ID] == JYULatticeProxy.FLUID_ENUM:
+            if node.data[CUBA.MATERIAL_ID] == ProxyLattice.FLUID_ENUM:
                 sim_ux = node.data[CUBA.VELOCITY][0]
                 sim_uy = node.data[CUBA.VELOCITY][1]
                 sim_uz = node.data[CUBA.VELOCITY][2]
@@ -118,7 +125,9 @@ class JYUEngineTestCase(unittest.TestCase):
                 tot_uy = tot_uy + sim_uy
 
         rel_l2_error = math.sqrt(tot_diff2/tot_ana2)
-        print ('Relative L2-error norm = %e\n' % (rel_l2_error))
+        print ('\nRelative L2-error norm = %e' % (rel_l2_error))
+        print 'Comp.time (s) = {}, MFLUPS = {}'.format(comp_time,
+                                                       MFLUP/comp_time)
 
         self.assertTrue(rel_l2_error < 1.0e-10)
         self.assertTrue(math.fabs(tot_ux) < 1.0e-10)

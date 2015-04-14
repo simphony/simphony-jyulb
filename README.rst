@@ -1,7 +1,7 @@
 simphony-jyulb
 ==============
 
-The JYU-LB engine-wrapper for the SimPhoNy framework.
+Internal and file-IO based JYU-LB engine-wrappers for the SimPhoNy framework.
 
 .. image:: https://travis-ci.org/simphony/simphony-jyulb.svg?branch=master
     :target: https://travis-ci.org/simphony/simphony-jyulb
@@ -45,12 +45,13 @@ or::
 JYU-LB installation
 ~~~~~~~~~~~~~~~~~~~
 
-This engine-wrapper uses JYU-LB fluid flow simulator.
+These engine-wrappers use JYU-LB fluid flow simulators and the related source code.
 
 The JYU-LB source code is available on github: https://github.com/simphony/JYU-LB
 
-The engine wrapper assumes that there is an executable called "jyu_lb_isothermal.exe"
-that can be found in the PATH and an exception is thrown if this is not the case.  
+The file-IO based engine wrapper assumes that there is an executable called
+"jyu_lb_isothermal.exe" that can be found in the PATH and an exception is thrown
+if this is not the case.  
 
 Testing
 -------
@@ -62,4 +63,6 @@ To run the full test-suite run::
 Directory structure
 -------------------
 
-- jyulb -- to hold the wrapper implementation
+- jyulb -- to hold the wrapper implementations
+- jyulb/fileio -- to hold the file-IO based wrapper implementations
+- jyulb/internal -- to hold the internal wrapper implementations
