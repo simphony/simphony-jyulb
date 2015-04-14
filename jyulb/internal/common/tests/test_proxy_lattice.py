@@ -108,15 +108,13 @@ class ProxyLatticeTestCase(unittest.TestCase):
         self.assertEqual(check_sum, check_ifrcy)
         self.assertEqual(0.0, check_ifrcz)
 
+        # Iterated nodes belong to the solid phase (channel walls)
+        # and should not have data related to the given CUBA keywords
         for node in proxy.iter_nodes(np.ndindex(1, self.ny, self.nz)):
-            try:
+            with self.assertRaises(KeyError):
                 node.data[CUBA.DENSITY]
                 node.data[CUBA.VELOCITY]
                 node.data[CUBA.FORCE]
-            except:
-                pass
-            else:
-                raise AssertionError('Field data stored for solid nodes.')
 
         np_test.assert_array_equal((1*self.h, 2*self.h, 3*self.h),
                                    proxy.get_coordinate((1, 2, 3)))
