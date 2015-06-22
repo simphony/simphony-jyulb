@@ -12,13 +12,21 @@ Internal and file-IO based JYU-LB engine-wrappers for the SimPhoNy framework.
 Repository
 ----------
 
-simphony-jyulb is hosted on github: https://github.com/simphony/simphony-jyulb
+Simphony-jyulb is hosted on github: https://github.com/simphony/simphony-jyulb
 
 Requirements
 ------------
- - `simphony-common`_ >= 0.1.1
+- `simphony-common`_ >= 0.1.1
 
 .. _simphony-common: https://github.com/simphony/simphony-common
+
+- `cython`_
+
+.. _cython: https://pypi.python.org/pypi/Cython/
+
+- `JYU-LB`_
+
+.. _JYU-LB: https://github.com/simphony/JYU-LB
 
 .. note::
   simphony-jyulb uses keywords (COLLISION_OPERATOR, REFERENCE_DENSITY, GRAVITY,
@@ -30,7 +38,17 @@ Requirements
 Installation
 ------------
 
-The package requires python 2.7.x. Installation is based on setuptools::
+The package requires python 2.7.x, cython and JYU-LB header files along with
+`simphony-common` package to build and install cython extension. To get the
+required files clone the repository and install dependencies:
+
+    # Clone recursively
+    git clone --recursive https://github.com/simphony/simphony-jyulb.git
+
+    # Install required dependencies
+    pip install -r requirements.txt
+
+The next step is straight forward and is based on setuptools::
 
     # build and install
     python setup.py install
@@ -39,6 +57,14 @@ or::
 
     # build for in-place development
     python setup.py develop
+
+.. note::
+  In case of changes to JYU-LB repository run the below command to fetch the changes::
+
+    # Get submodule's changes
+    git submodule update --remote
+
+  For more information on git submodules see: https://git-scm.com/book/en/v2/Git-Tools-Submodules
 
 JYU-LB installation
 ~~~~~~~~~~~~~~~~~~~
@@ -50,6 +76,23 @@ The JYU-LB source code is available on github: https://github.com/simphony/JYU-L
 The file-IO based engine wrapper assumes that there is an executable called
 "jyu_lb_isothermal.exe" that can be found in the PATH and an exception is thrown
 if this is not the case.
+
+For convenience there is a shell script called `install_external.sh` which
+is included in this repository. Running this script will install the executable.
+Default installation path points to `/usr/local/bin/` but it is possible to pass it via
+`--prefix` parameter (should be absolute path)::
+
+  # Install jyu_lb_isothermal.exe to `/usr/local/bin/` with super user rights
+  sudo ./install_external.sh
+
+  # Install to a custom path
+  ./install_external.sh --prefix=/home/username/.local/bin
+
+One can add the custom path to the environment (`~/.bashrc`)::
+
+  export PATH=$PATH:/home/username/.local/bin
+
+
 
 Testing
 -------
