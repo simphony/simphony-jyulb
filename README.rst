@@ -5,11 +5,9 @@ Internal and file-IO based JYU-LB engine-wrappers for the SimPhoNy framework.
 
 .. image:: https://travis-ci.org/simphony/simphony-jyulb.svg?branch=master
     :target: https://travis-ci.org/simphony/simphony-jyulb
-      :alt: Build status
 
 .. image:: https://coveralls.io/repos/simphony/simphony-jyulb/badge.svg
    :target: https://coveralls.io/r/simphony/simphony-jyulb
-      :alt: Test coverage
 
 Repository
 ----------
@@ -18,7 +16,7 @@ simphony-jyulb is hosted on github: https://github.com/simphony/simphony-jyulb
 
 Requirements
 ------------
- - `simphony-common`_ >= 0.1.1 
+ - `simphony-common`_ >= 0.1.1
 
 .. _simphony-common: https://github.com/simphony/simphony-common
 
@@ -27,7 +25,7 @@ Requirements
   FLOW_TYPE, EXTERNAL_FORCING) which currently do not belong to the CUBA-keywords.
 
   simphony-jyulb treats the BC data component as a dummy variable (currently there
-  is no SimPhoNy definition for BC).  
+  is no SimPhoNy definition for BC).
 
 Installation
 ------------
@@ -51,7 +49,7 @@ The JYU-LB source code is available on github: https://github.com/simphony/JYU-L
 
 The file-IO based engine wrapper assumes that there is an executable called
 "jyu_lb_isothermal.exe" that can be found in the PATH and an exception is thrown
-if this is not the case.  
+if this is not the case.
 
 Testing
 -------
