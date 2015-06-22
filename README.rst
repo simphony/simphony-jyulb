@@ -24,7 +24,7 @@ Requirements
 
 .. _cython: https://pypi.python.org/pypi/Cython/
 
-- `JYU-LB`_
+- `JYU-LB`_ >= 0.1.1
 
 .. _JYU-LB: https://github.com/simphony/JYU-LB
 
