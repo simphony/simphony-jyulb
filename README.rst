@@ -38,7 +38,7 @@ Requirements
 Installation
 ------------
 
-The package requires python 2.7.x, cython and JYU-LB header files along with
+The package requires python 2.7.x, cython and JYU-LB header and source files along with
 `simphony-common` package to build and install cython extension. To get the
 required files clone the repository and install dependencies::
 
