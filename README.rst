@@ -40,7 +40,7 @@ Installation
 
 The package requires python 2.7.x, cython and JYU-LB header files along with
 `simphony-common` package to build and install cython extension. To get the
-required files clone the repository and install dependencies:
+required files clone the repository and install dependencies::
 
     # Clone recursively
     git clone --recursive https://github.com/simphony/simphony-jyulb.git
