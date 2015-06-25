@@ -1,0 +1,19 @@
+Simphony-JYULB CHANGELOG
+======================
+
+Release 0.1.3
+-------------
+* Improved installation and updated related documentation (#22, #21)
+* Fix coverage link (#18)
+
+Release 0.1.2
+-------------
+* Added internal wrapper for JYU-LB
+
+Release 0.1.1
+-------------
+* Bugfix release and support of the simphony-common 0.1.1 version
+
+Release 0.1.0
+-------------
+* Initial release of FILE-IO wrapper
