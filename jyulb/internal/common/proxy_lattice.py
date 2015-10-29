@@ -19,13 +19,12 @@ class ProxyLattice(ABCLattice):
     Attributes
     ----------
     name : str
-    type : str
-        Bravais lattice type (should agree with the base_vect below).
-    base_vect : D x float
-        defines a Bravais lattice (an alternative for primitive vectors).
-    size : tuple of D x size
-        number of lattice nodes (in the direction of each axis).
-    origin : D x float
+    primitive_cell : PrimitiveCell
+        primitive cell speficyinf the 3D Bravais lattice
+    size : int[3]
+        number of lattice nodes (in the direction of primitive vector).
+    origin : float[3]
+        lattice origin
     data : DataContainer
         high level CUBA data assigned to lattice.
     geom : PyGeom
@@ -38,13 +37,10 @@ class ProxyLattice(ABCLattice):
     SOLID_ENUM = domain.SOLID_ENUM
     FLUID_ENUM = domain.FLUID_ENUM
 
-    def __init__(self, name, type, base_vect, geom, fdata):
+    def __init__(self, name, primitive_cell, geom, fdata):
         self.name = name
-        self._type = type
-        self._base_vect = np.zeros(3, dtype=np.float64)
-        self._base_vect[0:len(base_vect)] = base_vect[:]
+        self._primitive_cell = primitive_cell
         self._data = DataContainer()
-
         self._geom = geom
         self._fdata = fdata
 
@@ -116,7 +112,7 @@ class ProxyLattice(ABCLattice):
 
         return node
 
-    def update_node(self, node):
+    def update_nodes(self, nodes):
         """Update the corresponding lattice node (data copied).
 
         Parameters
@@ -129,20 +125,21 @@ class ProxyLattice(ABCLattice):
         IndexError
            if the index of the given node includes negative components.
         """
-        if any(value < 0 for value in node.index):
-            raise IndexError('invalid index: {}'.format(node.index))
+        for node in nodes:
+            if any(value < 0 for value in node.index):
+                raise IndexError('invalid index: {}'.format(node.index))
 
-        ijk = np.array(node.index, dtype=np.uint32)
+            ijk = np.array(node.index, dtype=np.uint32)
 
-        if self._geom.get_material_ijk(ijk) == ProxyLattice.FLUID_ENUM:
-            if CUBA.DENSITY in node.data:
-                self._fdata.set_den_ijk(ijk, node.data[CUBA.DENSITY])
-            if CUBA.VELOCITY in node.data:
-                vel = np.array(node.data[CUBA.VELOCITY], dtype=np.float64)
-                self._fdata.set_vel_ijk(ijk, vel)
-            if CUBA.FORCE in node.data:
-                frc = np.array(node.data[CUBA.FORCE], dtype=np.float64)
-                self._fdata.set_frc_ijk(ijk, frc)
+            if self._geom.get_material_ijk(ijk) == ProxyLattice.FLUID_ENUM:
+                if CUBA.DENSITY in node.data:
+                    self._fdata.set_den_ijk(ijk, node.data[CUBA.DENSITY])
+                if CUBA.VELOCITY in node.data:
+                    vel = np.array(node.data[CUBA.VELOCITY], dtype=np.float64)
+                    self._fdata.set_vel_ijk(ijk, vel)
+                if CUBA.FORCE in node.data:
+                    frc = np.array(node.data[CUBA.FORCE], dtype=np.float64)
+                    self._fdata.set_frc_ijk(ijk, frc)
 
     def iter_nodes(self, indices=None):
         """Get an iterator over the LatticeNodes described by the indices.

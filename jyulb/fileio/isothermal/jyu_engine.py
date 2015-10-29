@@ -1,4 +1,6 @@
 from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
+from simphony.cuds.abc_lattice import ABCLattice
+from simphony.cuds.primitive_cell import BravaisLattice
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.core.data_container import DataContainer
 from jyulb.cuba_extension import CUBAExtension
@@ -52,7 +54,8 @@ class JYUEngine(ABCModelingEngine):
         self._lattice = None
         self.CM = {}
         self.SP = {}
-        self.BC = DataContainer()
+        self.SD = {}
+        self.BC = {}
 
         # Default Computational Method data
         self.CM[CUBAExtension.COLLISION_OPERATOR] = JYUEngine.TRT_ENUM
@@ -144,41 +147,48 @@ class JYUEngine(ABCModelingEngine):
         if self.SP[CUBAExtension.EXTERNAL_FORCING]:
             os.remove(frc_write_fname)
 
-    def add_lattice(self, lattice):
-        """Add a lattice to the modeling engine.
+    def add_dataset(self, container):
+        """Add a CUDS Lattice container
 
         The following CUBA keywords are acknowledged in node data:
         MATERIAL_ID, DENSITY, VELOCITY, and FORCE.
 
         Parameters
         ----------
-        lattice : ABCLattice
-            lattice to be added.
-
-        Returns
-        -------
-        proxy : ABCLattice
-            A lattice to be used to update/query the internal representation
-            stored inside the modeling-engine. See get_lattice for more
-            information.
+        container : {ABCLattice}
+            The CUDS Lattice container to add to the engine.
 
         Raises
         ------
-        RuntimeError
-           if a second lattice is added.
+        TypeError:
+            If the container type is not supported by the engine.
+        ValueError:
+            If there is already a dataset with the given name.
+        ValueError:
+            If the lattice type of the container is not cubic.
+
         """
-        if self._lattice is not None:
-            message = 'Not possible to add a second lattice in JYUEngine'
-            raise RuntimeError(message)
+
+        if not isinstance(container, ABCLattice):
+            message = 'Only lattice containers are supported in JYUEngine'
+            raise TypeError(message)
+        if bool(self.SD):
+            message = 'A lattice container already exists in JYUEngine'
+            raise ValueError(message)
+        lat_type = container.primitive_cell.bravais_lattice
+        if lat_type is not BravaisLattice.CUBIC:
+            message = 'Lattice type is not cubic'
+            raise ValueError(message)
+
+        self.SD[container.name] = container
 
         # Copy lattice attributes
-        name = lattice.name
-        type = lattice.type
-        nx = lattice.size[0]
-        ny = lattice.size[1]
-        nz = lattice.size[2]
-        org = lattice.origin
-        bvect = lattice.base_vect
+        name = container.name
+        pc = container.primitive_cell
+        nx = container.size[0]
+        ny = container.size[1]
+        nz = container.size[2]
+        org = container.origin
 
         # Allocate arrays for lattice data
         geom = np.zeros((nz, ny, nx), dtype=np.uint8)
@@ -192,61 +202,12 @@ class JYUEngine(ABCModelingEngine):
         self._data[CUBA.FORCE] = frc
 
         # Create a proxy lattice
-        self._lattice = JYULatticeProxy(name, type, bvect, (nx, ny, nz),
+        self._lattice = JYULatticeProxy(name, pc, (nx, ny, nz),
                                         org, self._data)
 
-        for node in lattice.iter_nodes():
-            self._lattice.update_node(node)
+        self._lattice.update_nodes(container.iter_nodes())
 
-        return self._lattice
-
-    def add_mesh(self, mesh):
-        """Add a mesh to the modeling engine.
-
-        Parameters
-        ----------
-        mesh : ABCMesh
-            mesh to be added.
-
-        Returns
-        -------
-        proxy : ABCMesh
-            A proxy mesh to be used to update/query the internal representation
-            stored inside the modeling-engine. See get_mesh for more
-            information.
-
-        Raises
-        ------
-        NotImplementedError
-           always.
-        """
-        message = 'JYUEngine does not handle meshes'
-        raise NotImplementedError(message)
-
-    def add_particles(self, particles):
-        """Add a particle container to the modeling engine.
-
-        Parameters
-        ----------
-        particles : ABCParticles
-            particle container to be added.
-
-        Returns
-        -------
-        ABCParticles
-            A particle container to be used to update/query the internal
-            representation stored inside the modeling-engine. See
-            get_particles for more information.
-
-        Raises
-        ------
-        NotImplementedError
-           always.
-        """
-        message = 'JYUEngine does not handle particle containers'
-        raise NotImplementedError(message)
-
-    def delete_lattice(self, name):
+    def remove_dataset(self, name):
         """Delete a lattice.
 
         Parameters
@@ -254,42 +215,15 @@ class JYUEngine(ABCModelingEngine):
         name : str
             name of the lattice to be deleted.
         """
-        self._data = {}
-        self._lattice = None
+        if name not in self.SD.keys():
+            message = 'Container does not exists in JYUEngine'
+            raise ValueError(message)
+        else:
+            del self.SD[name]
+            self._data = {}
+            self._lattice = None
 
-    def delete_mesh(self, name):
-        """Delete a mesh.
-
-        Parameters
-        ----------
-        name : str
-            name of the mesh to be deleted.
-
-        Raises
-        ------
-        NotImplementedError
-           always.
-        """
-        message = 'JYUEngine does not handle meshes'
-        raise NotImplementedError(message)
-
-    def delete_particles(self, name):
-        """Delete a particle container.
-
-        Parameters
-        ----------
-        name : str
-            name of the particle container to be deleted.
-
-        Raises
-        ------
-        NotImplementedError
-           always.
-        """
-        message = 'JYUEngine does not handle particle containers'
-        raise NotImplementedError(message)
-
-    def get_lattice(self, name):
+    def get_dataset(self, name):
         """ Get a lattice.
 
         The returned lattice can be used to query and update the state of the
@@ -304,55 +238,18 @@ class JYUEngine(ABCModelingEngine):
         -------
         ABCLattice
         """
+        if name not in self.SD.keys():
+            message = 'Container does not exists in JYUEngine'
+            raise ValueError(message)
         return self._lattice
 
-    def get_mesh(self, name):
-        """Get a mesh.
+    def get_dataset_names(self):
+        """ Returns the names of the all the datasets in the engine workspace.
 
-        The returned mesh can be used to query and update the state of the
-        mesh inside the modeling engine.
-
-        Parameters
-        ----------
-        name : str
-            name of the mesh to be retrieved.
-
-        Returns
-        -------
-        ABCMesh
-
-        Raises
-        ------
-        NotImplementedError
-           always.
         """
-        message = 'JYUEngine does not handle meshes'
-        raise NotImplementedError(message)
+        return self.SD.keys()
 
-    def get_particles(self, name):
-        """Get a particle container.
-
-        The returned particle container can be used to query and update the
-        state of the particle container inside the modeling engine.
-
-        Parameters
-        ----------
-        name : str
-            name of the particle container to be retrieved.
-
-        Returns
-        -------
-        ABCParticles
-
-        Raises
-        ------
-        NotImplementedError
-           always.
-        """
-        message = 'JYUEngine does not handle particle containers'
-        raise NotImplementedError(message)
-
-    def iter_lattices(self, names=None):
+    def iter_datasets(self, names=None):
         """Iterate over a subset or all of the lattices.
 
         Parameters
@@ -364,51 +261,22 @@ class JYUEngine(ABCModelingEngine):
         Yields
         -------
         ABCLattice
-        """
-        yield self._lattice
-
-    def iter_meshes(self, names=None):
-        """Iterate over a subset or all of the meshes.
-
-        Parameters
-        ----------
-        names : sequence of str, optional
-            names of specific meshes to be iterated over. If names is not
-            given, then all meshes will be iterated over.
-
-        Yields
-        -------
-        ABCMesh
 
         Raises
         ------
-        NotImplementedError
-           always.
+        ValueError
+            if any one of the names is not in SD
         """
-        message = 'JYUEngine does not handle meshes'
-        raise NotImplementedError(message)
+        if names is None:
+            for name in self.SD.keys():
+                yield self.SD[name]
+        else:
+            for name in names:
+                if name not in self.SD.keys():
+                    message = 'State data does not contain requested item'
+                    raise ValueError(message)
+                yield self.SD[name]
 
-    def iter_particles(self, names=None):
-        """Iterate over a subset or all of the particle containers.
-
-        Parameters
-        ----------
-        names : sequence of str, optional
-            names of specific particle containers to be iterated over.
-            If names is not given, then all particle containers will
-            be iterated over.
-
-        Yields
-        -------
-        ABCParticles
-
-        Raises
-        ------
-        NotImplementedError
-           always.
-        """
-        message = 'JYUEngine does not handle particle containers'
-        raise NotImplementedError(message)
 
     def _write_input_script(self, fname):
         """Write an input script file for the modeling engine.
@@ -424,7 +292,8 @@ class JYUEngine(ABCModelingEngine):
         f.write('# Lattice size (x y z)\n')
         f.write('%d %d %d\n' % self._lattice.size)
         f.write('# Lattice spacing\n')
-        f.write('%e\n' % self._lattice.base_vect[0])
+        f.write('%e\n' % np.sqrt(np.dot(self._lattice.primitive_cell.p1,
+                                        self._lattice.primitive_cell.p1)))
         f.write('# Discrete time step\n')
         f.write('%e\n' % self.CM[CUBA.TIME_STEP])
         f.write('# Reference density\n')

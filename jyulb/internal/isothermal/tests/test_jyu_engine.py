@@ -11,9 +11,10 @@ from simphony.cuds.lattice import make_cubic_lattice
 from simphony.engine import jyulb_internal_isothermal as lb
 from jyulb.internal.common.proxy_lattice import ProxyLattice
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
+from simphony.testing.abc_check_engine import LatticeEngineCheck
 
 
-class JYUEngineTestCase(unittest.TestCase):
+class JYUEngineTestCase(LatticeEngineCheck, unittest.TestCase):
 
     """Test case for JYUEngine class."""
 
@@ -132,15 +133,6 @@ class JYUEngineTestCase(unittest.TestCase):
         self.assertTrue(rel_l2_error < 1.0e-10)
         self.assertTrue(math.fabs(tot_ux) < 1.0e-10)
         self.assertTrue(math.fabs(tot_uy) < 1.0e-10)
-
-        # Test iteration and removal of lattices
-        for lat in engine.iter_lattices():
-            self.assertEqual(lat, proxy_lat)
-
-        engine.delete_lattice(proxy_lat.name)
-        none_lat = engine.get_lattice(proxy_lat.name)
-
-        self.assertEqual(none_lat, None)
 
     def _calc_poiseuille_vel(self, index):
         wall_dist = (float(index-1) + 0.5)

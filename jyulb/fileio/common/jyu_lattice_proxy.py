@@ -1,7 +1,10 @@
-from simphony.core.data_container import DataContainer
-from simphony.cuds.abstractlattice import ABCLattice
-from simphony.cuds.lattice import LatticeNode
 import numpy as np
+from simphony.cuds.abc_lattice import ABCLattice
+from simphony.core.cuds_item import CUDSItem
+from simphony.core.data_container import DataContainer
+from simphony.cuds.primitive_cell import PrimitiveCell
+from simphony.cuds.lattice import LatticeNode
+
 
 
 class JYULatticeProxy(ABCLattice):
@@ -18,13 +21,13 @@ class JYULatticeProxy(ABCLattice):
     Attributes
     ----------
     name : str
-    type : str
-        Bravais lattice type (should agree with the base_vect below).
-    base_vect : D x float
-        defines a Bravais lattice (an alternative for primitive vectors).
-    size : tuple of D x size
-        number of lattice nodes (in the direction of each axis).
-    origin : D x float
+        name of lattice
+    primitive_cell : PrimitiveCell
+        primitive cell specifying the 3D Bravais lattice
+    size : int[3]
+        lattice dimensions
+    origin : float[3]
+        lattice origin
     data : DataContainer
         high level CUBA data assigned to lattice
     external_node_data : dictionary
@@ -36,22 +39,18 @@ class JYULatticeProxy(ABCLattice):
     SOLID_ENUM = 0
     FLUID_ENUM = 255
 
-    def __init__(self, name, type, base_vect, size, origin, ext_node_data):
+    def __init__(self, name, primitive_cell, size, origin, ext_node_data):
         self.name = name
-        self._type = type
-        self._base_vect = np.array(base_vect, dtype=np.float64)
-        self._size = tuple(size)
-        self._origin = np.array(origin, dtype=np.float64)
+        self._primitive_cell = primitive_cell
+        self._size = size[0], size[1], size[2]
+        self._origin = np.array((origin[0], origin[1], origin[2]),
+                                dtype=np.float)
         self._data = DataContainer()
+
+        self._items_count = {
+            CUDSItem.NODE: lambda: self._size
+        }
         self._external_node_data = ext_node_data
-
-    @property
-    def type(self):
-        return self._type
-
-    @property
-    def base_vect(self):
-        return self._base_vect
 
     @property
     def size(self):
@@ -86,43 +85,42 @@ class JYULatticeProxy(ABCLattice):
            if the given index includes negative components.
         """
         # JYU-LB modeling engines assume a specific memory order;
-        # the indexes must be reversed in a data access
-        ti = index
-        rev_ti = ti[::-1]
+        # the indices must be reversed in a data access
+        rev_ind = tuple(index[::-1])
 
-        if any(value < 0 for value in rev_ti):
-            raise IndexError('invalid index: {}'.format(rev_ti))
+        if any(value < 0 for value in rev_ind):
+            raise IndexError('invalid index: {}'.format(rev_ind))
 
-        node = LatticeNode(ti)
+        node = LatticeNode(tuple(index))
         for key in self._external_node_data:
-            node.data[key] = self._external_node_data[key][rev_ti]
-
+            node.data[key] = self._external_node_data[key][rev_ind]
         return node
 
-    def update_node(self, lat_node):
-        """Update the corresponding lattice node (data copied).
+    def update_nodes(self, nodes):
+        """Update the corresponding lattice nodes (data copied).
 
         Parameters
         ----------
-        lat_node : reference to a LatticeNode object
-            data copied from the given node
+        nodes : iterable of LatticeNode objects
+            reference to LatticeNode objects from where the data is copied
+            to the JYULatticeProxy
 
         Raises
         ------
         IndexError
            if the index of the given node includes negative components.
         """
-        # JYU-LB modeling engines assume a specific memory order;
-        # the indexes must be reversed in a data access
-        ind = lat_node.index
-        rev_ind = ind[::-1]
+        for node in nodes:
+            # JYU-LB modeling engines assume a specific memory order;
+            # the indexes must be reversed in data access
+            ind = node.index
+            rev_ind = ind[::-1]
+            if any(value < 0 for value in rev_ind):
+                raise IndexError('invalid index: {}'.format(rev_ind))
 
-        if any(value < 0 for value in rev_ind):
-            raise IndexError('invalid index: {}'.format(rev_ind))
-
-        for key in self._external_node_data:
-            if key in lat_node.data:
-                self._external_node_data[key][rev_ind] = lat_node.data[key]
+            for key in self._external_node_data:
+                if key in node.data:
+                    self._external_node_data[key][rev_ind] = node.data[key]
 
     def iter_nodes(self, indices=None):
         """Get an iterator over the LatticeNodes described by the indices.
@@ -143,24 +141,29 @@ class JYULatticeProxy(ABCLattice):
             for index in indices:
                 yield self.get_node(index)
 
-    def get_coordinate(self, index):
-        """Get coordinate of the given index coordinate.
+    def count_of(self, item_type):
+        """ Return the count of item_type in the container.
 
         Parameters
         ----------
-        index : D x int (node index coordinate)
+        item_type : CUDSItem
+            The CUDSItem enum of the type of the items to return
+            the count of.
 
         Returns
         -------
-        D x float
+        count : int
+            The number of items of item_type in the container.
 
         Raises
         ------
-        NotImplementedError
-           if the lattice type is 'Hexagonal'.
-        """
-        if self._type == 'Hexagonal':
-            raise NotImplementedError("""Get_coordinate for
-                Hexagonal system not implemented!""")
+        ValueError :
+            If the type of the item is not supported in the current
+            container.
 
-        return self.origin + self.base_vect*np.array(index)
+        """
+        try:
+            return np.prod(self._items_count[item_type]())
+        except KeyError:
+            error_str = "Trying to obtain count a of non-supported item: {}"
+            raise ValueError(error_str.format(item_type))

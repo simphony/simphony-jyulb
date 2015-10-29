@@ -8,11 +8,13 @@ from simphony.core.cuba import CUBA
 from jyulb.cuba_extension import CUBAExtension
 from simphony.cuds.lattice import make_cubic_lattice
 from simphony.engine import jyulb_fileio_isothermal as lb
+from simphony.cuds.abc_lattice import ABCLattice
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
+from simphony.testing.abc_check_engine import LatticeEngineCheck
 
 
-class JYUEngineTestCase(unittest.TestCase):
+class JYUEngineTestCase(LatticeEngineCheck, unittest.TestCase):
 
     """Test case for JYUEngine class."""
 
@@ -45,6 +47,71 @@ class JYUEngineTestCase(unittest.TestCase):
     def cleanup(self):
         os.chdir(self.saved_path)
         shutil.rmtree(self.temp_dir)
+
+    def engine_factory(self):
+        return lb.JYUEngine()
+
+    def create_dataset_items(self):
+        """ Not applicable to JYU-LB
+        """
+        pass
+
+    def check_instance_of_dataset(self, ds):
+        self.assertIsInstance(ds, ABCLattice,
+                              "Error: Dataset must be ABCLattice!")
+
+    def test_delete_dataset(self):
+        """ JYU-LB does not support adding multiple datasets, therefore
+        this test is overriden
+
+        """
+        engine = self.engine_factory()
+        engine.add_dataset(self.create_dataset("test"))
+        for ds in engine.iter_datasets():
+            engine.remove_dataset(ds.name)
+            with self.assertRaises(ValueError):
+                engine.get_dataset("test")
+            with self.assertRaises(Exception):
+                self.compare_dataset(ds, ds)
+
+    def test_add_dataset_data_copy(self):
+        """ JYU-LB does not support multiple datasets, therefore
+        this test is overridden
+        """
+        pass
+
+    def test_get_dataset_names(self):
+        """ JYU-LB does not support multiple datasets, therefore
+        this test is overridden
+        """
+
+        engine = self.engine_factory()
+        # add a few empty datasets
+        ds_names = ["test"]
+
+        engine.add_dataset(self.create_dataset("test"))
+
+        # test that we are getting all the names
+        names = [
+            n for n in engine.get_dataset_names()]
+        self.assertEqual(names, ds_names)
+
+    def test_iter_dataset(self):
+        """ JYU-LB does not support multiple datasets, therefore
+        this test is overridden
+        """
+        engine = self.engine_factory()
+
+        ds_names = ["test"]
+        engine.add_dataset(self.create_dataset("test"))
+
+        # test iterating over all
+        names = [ds.name for ds in engine.iter_datasets()]
+        self.assertEqual(names, ds_names)
+
+        for ds in engine.iter_datasets(ds_names):
+            self.check_instance_of_dataset(ds)
+
 
     def test_run_engine(self):
         """Running the jyu-lb modeling engine."""
@@ -82,23 +149,23 @@ class JYUEngineTestCase(unittest.TestCase):
                 node.data[CUBA.MATERIAL_ID] = JYULatticeProxy.SOLID_ENUM
             else:
                 node.data[CUBA.MATERIAL_ID] = JYULatticeProxy.FLUID_ENUM
-            lat.update_node(node)
+            lat.update_nodes([node])
 
         # Initialize flow variables at fluid lattice nodes
         for node in lat.iter_nodes():
             if node.data[CUBA.MATERIAL_ID] == JYULatticeProxy.FLUID_ENUM:
                 node.data[CUBA.VELOCITY] = (0, 0, 0)
                 node.data[CUBA.DENSITY] = 1.0
-            lat.update_node(node)
+            lat.update_nodes([node])
 
         # Add lattice to the engine
-        engine.add_lattice(lat)
+        engine.add_dataset(lat)
 
         # Run the case
         engine.run()
 
         # Analyse the results
-        proxy_lat = engine.get_lattice(lat.name)
+        proxy_lat = engine.get_dataset(lat.name)
 
         # Compute the relative L2-error norm
         tot_diff2 = 0.0
@@ -123,15 +190,6 @@ class JYUEngineTestCase(unittest.TestCase):
         self.assertTrue(rel_l2_error < 1.0e-10)
         self.assertTrue(math.fabs(tot_ux) < 1.0e-10)
         self.assertTrue(math.fabs(tot_uy) < 1.0e-10)
-
-        # Test iteration and removal of lattices
-        for lat in engine.iter_lattices():
-            self.assertEqual(lat, proxy_lat)
-
-        engine.delete_lattice(proxy_lat.name)
-        none_lat = engine.get_lattice(proxy_lat.name)
-
-        self.assertEqual(none_lat, None)
 
     def _calc_poiseuille_vel(self, index):
         wall_dist = (float(index-1) + 0.5)
