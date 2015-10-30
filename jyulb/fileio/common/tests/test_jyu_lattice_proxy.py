@@ -12,7 +12,7 @@ from simphony.testing.utils import (
 from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
 
 from simphony.testing.abc_check_lattice import (
-    CheckLatticeContainer, CheckLatticeNodeOperations)
+    CheckLatticeContainer, CheckLatticeNodeOperations, CheckLatticeNodeCoordinates)
 
 
 def _create_zeroed_lattice(name, primitive_cell, size, origin):
@@ -143,6 +143,15 @@ class TestJYULatticeProxyNodeOperations(CheckLatticeNodeOperations,
         indexes = {node.index for node in container.iter_nodes(expected)}
         self.assertEqual(indexes, expected)
 
+
+class TestJYULatticeProxyNodeNodeCoordinates(CheckLatticeNodeCoordinates,
+                                        unittest.TestCase):
+
+    def container_factory(self, name, primitive_cell, size, origin):
+        return _create_zeroed_lattice(name, primitive_cell, size, origin)
+
+    def supported_cuba(self):
+        return [CUBA.MATERIAL_ID, CUBA.DENSITY, CUBA.VELOCITY, CUBA.FORCE]
 
 if __name__ == '__main__':
     unittest.main()
