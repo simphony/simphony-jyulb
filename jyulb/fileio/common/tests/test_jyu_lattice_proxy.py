@@ -11,40 +11,29 @@ from simphony.testing.utils import (
 
 from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
 
-
 from simphony.testing.abc_check_lattice import (
-    CheckLatticeContainer, CheckLatticeNodeOperations,
-    CheckLatticeNodeCoordinates)
+    CheckLatticeContainer, CheckLatticeNodeOperations)
 
 
-class TestJYULatticeProxyContainer(CheckLatticeContainer,
-                                   unittest.TestCase):
+def _create_zeroed_lattice(name, primitive_cell, size, origin):
+    """ Returns a lattice where the node-data only contains null values
 
-    """Test case for JYULatticeProxy class."""
-    def container_factory(self, name, primitive_cell, size, origin):
-        self.ext_ndata = DataContainer()
-        self.ext_ndata[CUBA.MATERIAL_ID] = np.zeros(size[::-1],
-                                                    dtype=np.uint8)
-        self.ext_ndata[CUBA.DENSITY] = np.zeros(size[::-1],
-                                                dtype=np.float64)
-        self.ext_ndata[CUBA.VELOCITY] = np.zeros(size[::-1] + (3,),
-                                                 dtype=np.float64)
-        self.ext_ndata[CUBA.FORCE] = np.zeros(size[::-1] + (3,),
-                                              dtype=np.float64)
-        return JYULatticeProxy(name, primitive_cell, size, origin,
-                               self.ext_ndata)
-
-    def supported_cuba(self):
-        return set(CUBA)
+    """
+    ext_ndata = DataContainer()
+    ext_ndata[CUBA.MATERIAL_ID] = np.zeros(size[::-1], dtype=np.uint8)
+    ext_ndata[CUBA.DENSITY] = np.zeros(size[::-1], dtype=np.float64)
+    ext_ndata[CUBA.VELOCITY] = np.zeros(size[::-1] + (3,), dtype=np.float64)
+    ext_ndata[CUBA.FORCE] = np.zeros(size[::-1] + (3,), dtype=np.float64)
+    return JYULatticeProxy(name, primitive_cell, size, origin, ext_ndata)
 
 
 def _create_data_with_zero_values(restricted_cuba):
-    """ Create a dummy ZERO value for the CUBA keyword.
+    """ Return a DataContainer containing ZERO values
 
     Parameters
     ----------
     restricted_cuba : CUBA
-        The cuba keys
+        The cuba keys which should appear
 
     """
     data = {cuba: _zero_value(cuba) for cuba in restricted_cuba}
@@ -69,21 +58,25 @@ def _zero_value(cuba):
                 return np.zeros(shape=shape, dtype=np.int32)
 
 
+class TestJYULatticeProxyContainer(CheckLatticeContainer,
+                                   unittest.TestCase):
+
+    """Test case for JYULatticeProxy class."""
+    def container_factory(self, name, primitive_cell, size, origin):
+        return _create_zeroed_lattice(name, primitive_cell, size, origin)
+
+    def supported_cuba(self):
+        return set(CUBA)
+
+
 class TestJYULatticeProxyNodeOperations(CheckLatticeNodeOperations,
                                         unittest.TestCase):
 
     def container_factory(self, name, primitive_cell, size, origin):
-        self.ext_ndata = DataContainer()
-        self.ext_ndata[CUBA.MATERIAL_ID] = np.zeros(size[::-1], dtype=np.uint8)
-        self.ext_ndata[CUBA.DENSITY] = np.zeros(size[::-1], dtype=np.float64)
-        self.ext_ndata[CUBA.VELOCITY] = np.zeros(size[::-1] + (3,), dtype=np.float64)
-        self.ext_ndata[CUBA.FORCE] = np.zeros(size[::-1] + (3,), dtype=np.float64)
-        return JYULatticeProxy(name, primitive_cell, size, origin,
-                               self.ext_ndata)
+        return _create_zeroed_lattice(name, primitive_cell, size, origin)
 
     def supported_cuba(self):
-        return set([CUBA.MATERIAL_ID, CUBA.DENSITY, CUBA.VELOCITY,
-                    CUBA.FORCE])
+        return [CUBA.MATERIAL_ID, CUBA.DENSITY, CUBA.VELOCITY, CUBA.FORCE]
 
     def test_get_node(self):
         # TODO https://github.com/simphony/simphony-common/issues/216
