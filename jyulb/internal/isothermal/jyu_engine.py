@@ -51,7 +51,7 @@ class JYUEngine(ABCModelingEngine):
     def __init__(self):
         """Initialize and set default parameters for CM, BC, SP, and SD."""
         # Definition of CM, SP, BC, and SD data components
-        self._lat = None
+        self._lattice_proxy = None
         self._solver = None
         self._pygeom = None
         self._prms = solver.PyFlowParams()
@@ -89,7 +89,7 @@ class JYUEngine(ABCModelingEngine):
         RuntimeError
            if a lattice has not been added.
         """
-        if self._lat is None:
+        if self._lattice_proxy is None:
             message = 'A lattice is not added before run in JYUEngine'
             raise RuntimeError(message)
 
@@ -159,10 +159,11 @@ class JYUEngine(ABCModelingEngine):
         self._solver = solver.PySolver(self._pygeom, self._prms)
         pyfdata = self._solver.get_field_data()
 
-        self._lat = ProxyLattice(container.name, container.primitive_cell,
-                                 self._pygeom, pyfdata)
+        self._lattice_proxy = ProxyLattice(container.name,
+                                           container.primitive_cell,
+                                           self._pygeom, pyfdata)
 
-        self._lat.update_nodes(container.iter_nodes())
+        self._lattice_proxy.update_nodes(container.iter_nodes())
 
     def remove_dataset(self, name):
         """ Remove a dataset from the internal
@@ -183,7 +184,7 @@ class JYUEngine(ABCModelingEngine):
             raise ValueError(message)
         else:
             del self.SD[name]
-            self._lat = None
+            self._lattice_proxy = None
             self._is_fdata_initialized = False
             self._solver = None
 
@@ -210,7 +211,7 @@ class JYUEngine(ABCModelingEngine):
         if name not in self.SD:
             message = 'Container does not exists in JYUEngine'
             raise ValueError(message)
-        return self._lat
+        return self._lattice_proxy
 
     def get_dataset_names(self):
         """ Returns the names of the all the datasets in the engine workspace.
@@ -219,21 +220,29 @@ class JYUEngine(ABCModelingEngine):
         return self.SD.keys()
 
     def iter_datasets(self, names=None):
-        """ Returns an iterator over a subset or all of the containers.
+        """Iterate over a subset or all of the lattices.
 
         Parameters
         ----------
         names : sequence of str, optional
-            names of specific containers to be iterated over. If names is not
-            given, then all containers will be iterated over.
+            names of specific lattices to be iterated over. If names is not
+            given, then all lattices will be iterated over.
 
         Yields
-        ------
+        -------
         ABCLattice
+
+        Raises
+        ------
+        ValueError
+            if any one of the names is not in SD
         """
         if names is None:
             for name in self.SD.keys():
                 yield self.SD[name]
         else:
             for name in names:
+                if name not in self.SD.keys():
+                    message = 'State data does not contain requested item'
+                    raise ValueError(message)
                 yield self.SD[name]

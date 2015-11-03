@@ -63,7 +63,6 @@ class JYUEngineTestCase(LatticeEngineCheck, unittest.TestCase):
     def test_delete_dataset(self):
         """ JYU-LB does not support adding multiple datasets, therefore
         this test is overriden
-
         """
         engine = self.engine_factory()
         engine.add_dataset(self.create_dataset("test"))

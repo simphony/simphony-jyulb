@@ -51,7 +51,7 @@ class JYUEngine(ABCModelingEngine):
         """Initialize and set default parameters for CM, BC, SP, and SD."""
         # Definition of CM, SP, BC, and SD data components
         self._data = {}
-        self._lattice = None
+        self._lattice_proxy = None
         self.CM = {}
         self.SP = {}
         self.SD = {}
@@ -123,9 +123,9 @@ class JYUEngine(ABCModelingEngine):
             raise RuntimeError(message)
 
         # Read the simulated flow field
-        nx = self._lattice.size[0]
-        ny = self._lattice.size[1]
-        nz = self._lattice.size[2]
+        nx = self._lattice_proxy.size[0]
+        ny = self._lattice_proxy.size[1]
+        nz = self._lattice_proxy.size[2]
 
         den_data = self._data[CUBA.DENSITY]
         vel_data = self._data[CUBA.VELOCITY]
@@ -168,7 +168,7 @@ class JYUEngine(ABCModelingEngine):
             If the lattice type of the container is not cubic.
 
         """
-
+        self._update_dataset_names()
         if not isinstance(container, ABCLattice):
             message = 'Only lattice containers are supported in JYUEngine'
             raise TypeError(message)
@@ -179,8 +179,6 @@ class JYUEngine(ABCModelingEngine):
         if lat_type is not BravaisLattice.CUBIC:
             message = 'Lattice type is not cubic'
             raise ValueError(message)
-
-        self.SD[container.name] = container
 
         # Copy lattice attributes
         name = container.name
@@ -202,10 +200,12 @@ class JYUEngine(ABCModelingEngine):
         self._data[CUBA.FORCE] = frc
 
         # Create a proxy lattice
-        self._lattice = JYULatticeProxy(name, pc, (nx, ny, nz),
-                                        org, self._data)
+        self._lattice_proxy = JYULatticeProxy(name, pc, (nx, ny, nz),
+                                              org, self._data)
 
-        self._lattice.update_nodes(container.iter_nodes())
+        self._lattice_proxy.update_nodes(container.iter_nodes())
+
+        self.SD[name] = self._lattice_proxy
 
     def remove_dataset(self, name):
         """Delete a lattice.
@@ -215,13 +215,14 @@ class JYUEngine(ABCModelingEngine):
         name : str
             name of the lattice to be deleted.
         """
+        self._update_dataset_names()
         if name not in self.SD.keys():
-            message = 'Container does not exists in JYUEngine'
+            message = 'Container does not exist in JYUEngine'
             raise ValueError(message)
         else:
             del self.SD[name]
             self._data = {}
-            self._lattice = None
+            self._lattice_proxy = None
 
     def get_dataset(self, name):
         """ Get a lattice.
@@ -238,15 +239,17 @@ class JYUEngine(ABCModelingEngine):
         -------
         ABCLattice
         """
+        self._update_dataset_names()
         if name not in self.SD.keys():
             message = 'Container does not exists in JYUEngine'
             raise ValueError(message)
-        return self._lattice
+        return self.SD[name]
 
     def get_dataset_names(self):
         """ Returns the names of the all the datasets in the engine workspace.
 
         """
+        self._update_dataset_names()
         return self.SD.keys()
 
     def iter_datasets(self, names=None):
@@ -267,6 +270,7 @@ class JYUEngine(ABCModelingEngine):
         ValueError
             if any one of the names is not in SD
         """
+        self._update_dataset_names()
         if names is None:
             for name in self.SD.keys():
                 yield self.SD[name]
@@ -326,3 +330,12 @@ class JYUEngine(ABCModelingEngine):
         f.write('Running JYU-LB software via SimPhoNy file-I/O wrapper\n')
 
         f.close()
+
+    def _update_dataset_names(self):
+        """ Go through dataset names and update them to self.SD dictionary
+
+        """
+        for name in self.SD.keys():
+            container = self.SD[name]
+            if container.name is not name:
+                self.SD[container.name] = self.SD.pop(name)
