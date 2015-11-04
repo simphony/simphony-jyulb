@@ -6,13 +6,11 @@ from simphony.core.cuba import CUBA
 from simphony.core.keywords import KEYWORDS
 from simphony.core.data_container import DataContainer
 from simphony.cuds.lattice import LatticeNode
-from simphony.testing.utils import (
-    create_data_container)
-
+from simphony.testing.utils import (create_data_container)
 from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
-
 from simphony.testing.abc_check_lattice import (
-    CheckLatticeContainer, CheckLatticeNodeOperations, CheckLatticeNodeCoordinates)
+    CheckLatticeContainer, CheckLatticeNodeOperations,
+    CheckLatticeNodeCoordinates)
 
 
 def _create_zeroed_lattice(name, primitive_cell, size, origin):
@@ -58,8 +56,7 @@ def _zero_value(cuba):
                 return np.zeros(shape=shape, dtype=np.int32)
 
 
-class TestJYULatticeProxyContainer(CheckLatticeContainer,
-                                   unittest.TestCase):
+class TestJYULatticeProxyContainer(CheckLatticeContainer, unittest.TestCase):
 
     """Test case for JYULatticeProxy class."""
     def container_factory(self, name, primitive_cell, size, origin):
@@ -144,8 +141,8 @@ class TestJYULatticeProxyNodeOperations(CheckLatticeNodeOperations,
         self.assertEqual(indexes, expected)
 
 
-class TestJYULatticeProxyNodeNodeCoordinates(CheckLatticeNodeCoordinates,
-                                        unittest.TestCase):
+class TestJYULatticeProxyNodeCoordinates(CheckLatticeNodeCoordinates,
+                                         unittest.TestCase):
 
     def container_factory(self, name, primitive_cell, size, origin):
         return _create_zeroed_lattice(name, primitive_cell, size, origin)

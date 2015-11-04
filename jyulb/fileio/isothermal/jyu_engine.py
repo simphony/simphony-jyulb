@@ -86,7 +86,7 @@ class JYUEngine(ABCModelingEngine):
            if a lattice has not been added or
            if execution of the modeling engine fails.
         """
-        if self._lattice is None:
+        if self._lattice_proxy is None:
             message = 'A lattice is not added before run in JYUEngine'
             raise RuntimeError(message)
 
@@ -205,6 +205,8 @@ class JYUEngine(ABCModelingEngine):
 
         self._lattice_proxy.update_nodes(container.iter_nodes())
 
+        self._lattice_proxy.data = container.data
+
         self.SD[name] = self._lattice_proxy
 
     def remove_dataset(self, name):
@@ -294,10 +296,10 @@ class JYUEngine(ABCModelingEngine):
         f.write('# Base name of the I/O data files (raw-format files)\n')
         f.write(self.base_fname + '\n')
         f.write('# Lattice size (x y z)\n')
-        f.write('%d %d %d\n' % self._lattice.size)
+        f.write('%d %d %d\n' % self._lattice_proxy.size)
         f.write('# Lattice spacing\n')
-        f.write('%e\n' % np.sqrt(np.dot(self._lattice.primitive_cell.p1,
-                                        self._lattice.primitive_cell.p1)))
+        p1 = self._lattice_proxy.primitive_cell.p1
+        f.write('%e\n' % np.sqrt(np.dot(p1, p1)))
         f.write('# Discrete time step\n')
         f.write('%e\n' % self.CM[CUBA.TIME_STEP])
         f.write('# Reference density\n')

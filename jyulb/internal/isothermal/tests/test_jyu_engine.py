@@ -9,8 +9,9 @@ from simphony.core.cuba import CUBA
 from jyulb.cuba_extension import CUBAExtension
 from simphony.cuds.lattice import make_cubic_lattice
 from simphony.engine import jyulb_internal_isothermal as lb
-from jyulb.internal.common.proxy_lattice import ProxyLattice
+from simphony.cuds.abc_lattice import ABCLattice
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
+from jyulb.internal.common.proxy_lattice import ProxyLattice
 from simphony.testing.abc_check_engine import LatticeEngineCheck
 
 
@@ -48,12 +49,111 @@ class JYUEngineTestCase(LatticeEngineCheck, unittest.TestCase):
         os.chdir(self.saved_path)
         shutil.rmtree(self.temp_dir)
 
+    def engine_factory(self):
+        return lb.JYUEngine()
+
+    def create_dataset(self, name):
+        """ This method is overriden, because JyuLB requires that certain
+        CUBA keys are always defined on Proxy Lattice objects.
+
+        """
+        lat = make_cubic_lattice(name, 1.0, (2, 3, 4))
+        for node in lat.iter_nodes():
+            node.data = {CUBA.MATERIAL_ID: ProxyLattice.FLUID_ENUM,
+                         CUBA.DENSITY: 0, CUBA.VELOCITY: [0, 0, 0],
+                         CUBA.FORCE: [0, 0, 0]}
+            lat.update_nodes([node])
+        return lat
+
+    def create_dataset_items(self):
+        """ Not applicable to JYU-LB
+        """
+        pass
+
+    def check_instance_of_dataset(self, ds):
+        self.assertIsInstance(ds, ABCLattice,
+                              "Error: Dataset must be ABCLattice!")
+
+    def test_delete_dataset(self):
+        """ JYU-LB does not support adding multiple datasets, therefore
+        this test is overriden
+        """
+        engine = self.engine_factory()
+        engine.add_dataset(self.create_dataset("test"))
+        for ds in engine.iter_datasets():
+            engine.remove_dataset(ds.name)
+            with self.assertRaises(ValueError):
+                engine.get_dataset("test")
+
+    def test_dataset_rename(self):
+        """ JYU-LB does not support adding multiple datasets, therefore
+        this test is overriden
+        """
+        engine = self.engine_factory()
+        engine.add_dataset(self.create_dataset(name='foo'))
+        ds = engine.get_dataset("foo")
+        ds.name = "bar"
+        self.assertEqual(ds.name, "bar")
+
+        # we should not be able to use the old name "foo"
+        with self.assertRaises(ValueError):
+            engine.get_dataset("foo")
+        with self.assertRaises(ValueError):
+            engine.remove_dataset("foo")
+        with self.assertRaises(ValueError):
+            [_ for _ in engine.iter_datasets(names=["foo"])]
+
+        # we should be able to access using the new "bar" name
+        ds_bar = engine.get_dataset("bar")
+        self.assertEqual(ds_bar.name, "bar")
+
+        # and we should be able to use the no-longer used
+        # "foo" name when adding another dataset
+        # remove the other dataset first
+        engine.remove_dataset("bar")
+        ds = engine.add_dataset(self.create_dataset(name='foo'))
+
+    def test_add_dataset_data_copy(self):
+        """ JYU-LB does not support multiple datasets, therefore
+        this test is overridden
+        """
+        pass
+
+    def test_get_dataset_names(self):
+        """ JYU-LB does not support multiple datasets, therefore
+        this test is overridden
+        """
+
+        engine = self.engine_factory()
+        # add a few empty datasets
+        ds_names = ["test"]
+
+        engine.add_dataset(self.create_dataset("test"))
+
+        # test that we are getting all the names
+        names = [
+            n for n in engine.get_dataset_names()]
+        self.assertEqual(names, ds_names)
+
+    def test_iter_dataset(self):
+        """ JYU-LB does not support multiple datasets, therefore
+        this test is overridden
+        """
+        engine = self.engine_factory()
+
+        ds_names = ["test"]
+        engine.add_dataset(self.create_dataset("test"))
+
+        # test iterating over all
+        names = [ds.name for ds in engine.iter_datasets()]
+        self.assertEqual(names, ds_names)
+
+        for ds in engine.iter_datasets(ds_names):
+            self.check_instance_of_dataset(ds)
+
     def test_run_engine(self):
         """Running the jyu-lb modeling engine."""
-        engine = lb.JYUEngine()
-
-        self.assertIsInstance(engine, ABCModelingEngine,
-                              "Error: not a ABCModelingEngine!")
+        engine = self.engine_factory()
 
         # Computational Method data
         engine.CM[CUBAExtension.COLLISION_OPERATOR] = self.coll_oper
@@ -84,17 +184,17 @@ class JYUEngineTestCase(LatticeEngineCheck, unittest.TestCase):
                 node.data[CUBA.MATERIAL_ID] = ProxyLattice.SOLID_ENUM
             else:
                 node.data[CUBA.MATERIAL_ID] = ProxyLattice.FLUID_ENUM
-            lat.update_node(node)
+            lat.update_nodes([node])
 
         # Initialize flow variables at fluid lattice nodes
         for node in lat.iter_nodes():
             if node.data[CUBA.MATERIAL_ID] == ProxyLattice.FLUID_ENUM:
                 node.data[CUBA.VELOCITY] = (0, 0, 0)
                 node.data[CUBA.DENSITY] = 1.0
-            lat.update_node(node)
+            lat.update_nodes([node])
 
         # Add lattice to the engine
-        engine.add_lattice(lat)
+        engine.add_dataset(lat)
 
         # Run the case
         start_time = time.time()
@@ -106,7 +206,7 @@ class JYUEngineTestCase(LatticeEngineCheck, unittest.TestCase):
         MFLUP = (self.nx-2)*self.ny*self.nz*self.tsteps/1e6
 
         # Analyse the results
-        proxy_lat = engine.get_lattice(lat.name)
+        proxy_lat = engine.get_dataset(lat.name)
 
         # Compute the relative L2-error norm
         tot_diff2 = 0.0

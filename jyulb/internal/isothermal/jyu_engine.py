@@ -97,24 +97,6 @@ class JYUEngine(ABCModelingEngine):
             self._solver.init_field_data()
             self._is_fdata_initialized = True
 
-        self._prms.time_step = self.CM[CUBA.TIME_STEP]
-
-        rden = self.SP[CUBAExtension.REFERENCE_DENSITY]
-        self._prms.reference_density = rden
-
-        self._prms.kinematic_viscosity = self.SP[CUBA.KINEMATIC_VISCOSITY]
-
-        grav = np.array(self.SP[CUBAExtension.GRAVITY], dtype=np.float64)
-        self._prms.gravity = grav
-
-        self._prms.flow_type = self.SP[CUBAExtension.FLOW_TYPE]
-
-        coll_op = self.CM[CUBAExtension.COLLISION_OPERATOR]
-        self._prms.collision_operator = coll_op
-
-        self._prms.external_forcing = True
-
-        self._solver = solver.PySolver(self._pygeom, self._prms)
         self._solver.evolve(self.CM[CUBA.NUMBER_OF_TIME_STEPS])
 
     def add_dataset(self, container):
@@ -135,6 +117,7 @@ class JYUEngine(ABCModelingEngine):
             If the lattice type of the container is not cubic.
 
         """
+        self._update_dataset_names()
         if not isinstance(container, ABCLattice):
             message = 'Only lattice containers are supported in JYUEngine'
             raise TypeError(message)
@@ -146,8 +129,6 @@ class JYUEngine(ABCModelingEngine):
             message = 'Lattice type is not cubic'
             raise ValueError(message)
 
-        self.SD[container.name] = container
-
         pylat = PyLattice(np.array(container.size, dtype=np.uint32),
                           np.array(container.origin, dtype=np.float64))
         self._pygeom = PyGeometry(pylat)
@@ -156,14 +137,37 @@ class JYUEngine(ABCModelingEngine):
             ijk = np.array(node.index, dtype=np.uint32)
             self._pygeom.set_material_ijk(ijk, node.data[CUBA.MATERIAL_ID])
 
+        self._prms.time_step = self.CM[CUBA.TIME_STEP]
+
+        rden = self.SP[CUBAExtension.REFERENCE_DENSITY]
+        self._prms.reference_density = rden
+
+        self._prms.kinematic_viscosity = self.SP[CUBA.KINEMATIC_VISCOSITY]
+
+        grav = np.array(self.SP[CUBAExtension.GRAVITY], dtype=np.float64)
+        self._prms.gravity = grav
+
+        self._prms.flow_type = self.SP[CUBAExtension.FLOW_TYPE]
+
+        coll_op = self.CM[CUBAExtension.COLLISION_OPERATOR]
+        self._prms.collision_operator = coll_op
+
+        self._prms.external_forcing = True
+
+        self._solver = solver.PySolver(self._pygeom, self._prms)
+
         self._solver = solver.PySolver(self._pygeom, self._prms)
         pyfdata = self._solver.get_field_data()
 
-        self._lattice_proxy = ProxyLattice(container.name,
-                                           container.primitive_cell,
-                                           self._pygeom, pyfdata)
+        name = container.name
+        pc = container.primitive_cell
+        self._lattice_proxy = ProxyLattice(name, pc, self._pygeom, pyfdata)
 
         self._lattice_proxy.update_nodes(container.iter_nodes())
+
+        self._lattice_proxy.data = container.data
+
+        self.SD[name] = self._lattice_proxy
 
     def remove_dataset(self, name):
         """ Remove a dataset from the internal
@@ -179,6 +183,7 @@ class JYUEngine(ABCModelingEngine):
             If there is no dataset with the given name
 
         """
+        self._update_dataset_names()
         if name not in self.SD:
             message = 'Container does not exists in JYUEngine'
             raise ValueError(message)
@@ -208,6 +213,7 @@ class JYUEngine(ABCModelingEngine):
             If there is no dataset with the given name
 
         """
+        self._update_dataset_names()
         if name not in self.SD:
             message = 'Container does not exists in JYUEngine'
             raise ValueError(message)
@@ -217,6 +223,7 @@ class JYUEngine(ABCModelingEngine):
         """ Returns the names of the all the datasets in the engine workspace.
 
         """
+        self._update_dataset_names()
         return self.SD.keys()
 
     def iter_datasets(self, names=None):
@@ -237,6 +244,7 @@ class JYUEngine(ABCModelingEngine):
         ValueError
             if any one of the names is not in SD
         """
+        self._update_dataset_names()
         if names is None:
             for name in self.SD.keys():
                 yield self.SD[name]
@@ -246,3 +254,13 @@ class JYUEngine(ABCModelingEngine):
                     message = 'State data does not contain requested item'
                     raise ValueError(message)
                 yield self.SD[name]
+
+
+    def _update_dataset_names(self):
+        """ Go through dataset names and update them to self.SD dictionary
+
+        """
+        for name in self.SD.keys():
+            container = self.SD[name]
+            if container.name is not name:
+                self.SD[container.name] = self.SD.pop(name)

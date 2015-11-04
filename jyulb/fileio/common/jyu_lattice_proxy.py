@@ -46,7 +46,6 @@ class JYULatticeProxy(ABCLattice):
         self._origin = np.array((origin[0], origin[1], origin[2]),
                                 dtype=np.float)
         self._data = DataContainer()
-
         self._items_count = {
             CUDSItem.NODE: lambda: self._size
         }
