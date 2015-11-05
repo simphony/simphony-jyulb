@@ -1,11 +1,10 @@
-import unittest
 import math
 from simphony.core.cuba import CUBA
 from jyulb.cuba_extension import CUBAExtension
 from simphony.cuds.abc_lattice import ABCLattice
 from simphony.cuds.lattice import make_cubic_lattice
-from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.testing.abc_check_engine import LatticeEngineCheck
+
 
 class JYUEngineCheck(LatticeEngineCheck):
 
@@ -56,7 +55,6 @@ class JYUEngineCheck(LatticeEngineCheck):
         # Configure a lattice
         lat = make_cubic_lattice(self.test_lattice_name, self.dr,
                                  (self.nx, self.ny, self.nz))
-
 
         # Set geometry for a Poiseuille channel
         for node in lat.iter_nodes():
