@@ -51,7 +51,7 @@ class JYUEngine(ABCModelingEngine):
         """Initialize and set default parameters for CM, BC, SP, and SD."""
         # Definition of CM, SP, BC, and SD data components
         self._data = {}
-        self._lattice_proxy = None
+        self._proxy_lattice = None
         self.CM = {}
         self.SP = {}
         self.SD = {}
@@ -86,7 +86,7 @@ class JYUEngine(ABCModelingEngine):
            if a lattice has not been added or
            if execution of the modeling engine fails.
         """
-        if self._lattice_proxy is None:
+        if self._proxy_lattice is None:
             message = 'A lattice is not added before run in JYUEngine'
             raise RuntimeError(message)
 
@@ -123,9 +123,9 @@ class JYUEngine(ABCModelingEngine):
             raise RuntimeError(message)
 
         # Read the simulated flow field
-        nx = self._lattice_proxy.size[0]
-        ny = self._lattice_proxy.size[1]
-        nz = self._lattice_proxy.size[2]
+        nx = self._proxy_lattice.size[0]
+        ny = self._proxy_lattice.size[1]
+        nz = self._proxy_lattice.size[2]
 
         den_data = self._data[CUBA.DENSITY]
         vel_data = self._data[CUBA.VELOCITY]
@@ -200,14 +200,14 @@ class JYUEngine(ABCModelingEngine):
         self._data[CUBA.FORCE] = frc
 
         # Create a proxy lattice
-        self._lattice_proxy = JYULatticeProxy(name, pc, (nx, ny, nz),
+        self._proxy_lattice = JYULatticeProxy(name, pc, (nx, ny, nz),
                                               org, self._data)
 
-        self._lattice_proxy.update_nodes(container.iter_nodes())
+        self._proxy_lattice.update_nodes(container.iter_nodes())
 
-        self._lattice_proxy.data = container.data
+        self._proxy_lattice.data = container.data
 
-        self.SD[name] = self._lattice_proxy
+        self.SD[name] = self._proxy_lattice
 
     def remove_dataset(self, name):
         """Delete a lattice.
@@ -224,7 +224,7 @@ class JYUEngine(ABCModelingEngine):
         else:
             del self.SD[name]
             self._data = {}
-            self._lattice_proxy = None
+            self._proxy_lattice = None
 
     def get_dataset(self, name):
         """ Get a lattice.
@@ -296,9 +296,9 @@ class JYUEngine(ABCModelingEngine):
         f.write('# Base name of the I/O data files (raw-format files)\n')
         f.write(self.base_fname + '\n')
         f.write('# Lattice size (x y z)\n')
-        f.write('%d %d %d\n' % self._lattice_proxy.size)
+        f.write('%d %d %d\n' % self._proxy_lattice.size)
         f.write('# Lattice spacing\n')
-        p1 = self._lattice_proxy.primitive_cell.p1
+        p1 = self._proxy_lattice.primitive_cell.p1
         f.write('%e\n' % np.sqrt(np.dot(p1, p1)))
         f.write('# Discrete time step\n')
         f.write('%e\n' % self.CM[CUBA.TIME_STEP])
