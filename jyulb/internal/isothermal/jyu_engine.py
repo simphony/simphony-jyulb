@@ -4,8 +4,6 @@ from jyulb.internal.common.domain import PyLattice, PyGeometry
 from simphony.cuds.abc_lattice import ABCLattice
 from simphony.cuds.primitive_cell import BravaisLattice
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-from simphony.core.data_container import DataContainer
-from simphony.cuds.primitive_cell import BravaisLattice
 from jyulb.cuba_extension import CUBAExtension
 from simphony.core.cuba import CUBA
 import numpy as np
@@ -254,7 +252,6 @@ class JYUEngine(ABCModelingEngine):
                     message = 'State data does not contain requested item'
                     raise ValueError(message)
                 yield self.SD[name]
-
 
     def _update_dataset_names(self):
         """ Go through dataset names and update them to self.SD dictionary

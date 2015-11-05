@@ -2,7 +2,6 @@ from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
 from simphony.cuds.abc_lattice import ABCLattice
 from simphony.cuds.primitive_cell import BravaisLattice
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-from simphony.core.data_container import DataContainer
 from jyulb.cuba_extension import CUBAExtension
 from simphony.core.cuba import CUBA
 import numpy as np
@@ -282,7 +281,6 @@ class JYUEngine(ABCModelingEngine):
                     message = 'State data does not contain requested item'
                     raise ValueError(message)
                 yield self.SD[name]
-
 
     def _write_input_script(self, fname):
         """Write an input script file for the modeling engine.

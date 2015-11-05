@@ -3,7 +3,6 @@ from simphony.core.cuba import CUBA
 from simphony.cuds.abc_lattice import ABCLattice
 from simphony.core.cuds_item import CUDSItem
 from simphony.core.data_container import DataContainer
-from simphony.cuds.primitive_cell import PrimitiveCell
 from simphony.cuds.lattice import LatticeNode
 from jyulb.internal.common import domain
 
