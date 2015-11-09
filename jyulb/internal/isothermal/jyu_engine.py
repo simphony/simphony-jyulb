@@ -260,4 +260,4 @@ class JYUEngine(ABCModelingEngine):
         for name in self._SD.keys():
             container = self._SD[name]
             if container.name is not name:
-                self.SD[container.name] = self._SD.pop(name)
+                self._SD[container.name] = self._SD.pop(name)
