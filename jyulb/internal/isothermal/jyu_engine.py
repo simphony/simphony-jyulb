@@ -59,7 +59,7 @@ class JYUEngine(ABCModelingEngine):
 
         self.CM = {}
         self.SP = {}
-        self.SD = {}
+        self._SD = {}
         self.BC = {}
 
         # Default Computational Method data
@@ -121,7 +121,7 @@ class JYUEngine(ABCModelingEngine):
         if not isinstance(container, ABCLattice):
             message = 'Only lattice containers are supported in JYUEngine'
             raise TypeError(message)
-        if bool(self.SD):
+        if bool(self._SD):
             message = 'A lattice container already exists in JYUEngine'
             raise ValueError(message)
         lat_type = container.primitive_cell.bravais_lattice
@@ -155,8 +155,6 @@ class JYUEngine(ABCModelingEngine):
         self._prms.external_forcing = True
 
         self._solver = solver.PySolver(self._pygeom, self._prms)
-
-        self._solver = solver.PySolver(self._pygeom, self._prms)
         pyfdata = self._solver.get_field_data()
 
         name = container.name
@@ -167,7 +165,7 @@ class JYUEngine(ABCModelingEngine):
 
         self._lattice_proxy.data = container.data
 
-        self.SD[name] = self._lattice_proxy
+        self._SD[name] = self._lattice_proxy
 
     def remove_dataset(self, name):
         """ Remove a dataset from the internal
@@ -184,11 +182,11 @@ class JYUEngine(ABCModelingEngine):
 
         """
         self._update_dataset_names()
-        if name not in self.SD:
+        if name not in self._SD:
             message = 'Container does not exists in JYUEngine'
             raise ValueError(message)
         else:
-            del self.SD[name]
+            del self._SD[name]
             self._lattice_proxy = None
             self._is_fdata_initialized = False
             self._solver = None
@@ -214,7 +212,7 @@ class JYUEngine(ABCModelingEngine):
 
         """
         self._update_dataset_names()
-        if name not in self.SD:
+        if name not in self._SD:
             message = 'Container does not exists in JYUEngine'
             raise ValueError(message)
         return self._lattice_proxy
@@ -224,7 +222,7 @@ class JYUEngine(ABCModelingEngine):
 
         """
         self._update_dataset_names()
-        return self.SD.keys()
+        return self._SD.keys()
 
     def iter_datasets(self, names=None):
         """Iterate over a subset or all of the lattices.
@@ -246,20 +244,20 @@ class JYUEngine(ABCModelingEngine):
         """
         self._update_dataset_names()
         if names is None:
-            for name in self.SD.keys():
-                yield self.SD[name]
+            for name in self._SD.keys():
+                yield self._SD[name]
         else:
             for name in names:
-                if name not in self.SD.keys():
+                if name not in self._SD.keys():
                     message = 'State data does not contain requested item'
                     raise ValueError(message)
-                yield self.SD[name]
+                yield self._SD[name]
 
     def _update_dataset_names(self):
-        """ Go through dataset names and update them to self.SD dictionary
+        """ Go through dataset names and update them to self._SD dictionary
 
         """
-        for name in self.SD.keys():
-            container = self.SD[name]
+        for name in self._SD.keys():
+            container = self._SD[name]
             if container.name is not name:
-                self.SD[container.name] = self.SD.pop(name)
+                self.SD[container.name] = self._SD.pop(name)
