@@ -25,15 +25,17 @@ class JYUEngine(ABCModelingEngine):
 
     Attributes
     ----------
-    BC : DataContainer
+    BC : dict
         container of attributes related to the boundary conditions.
-    CM : DataContainer
+    CM : dict
         container of attributes related to the computational method:
         collision operator, number of time steps, and time step.
-    SP : DataContainer
+    SP : dict
         container of attributes related to the system parameters/conditions:
         kinematic viscosity, reference density, gravity, flow type, and
         enforcement of external forcing.
+    SD : dict
+        container of state data
     """
 
     # Enumeration of some values for the configuration parameters
@@ -262,9 +264,9 @@ class JYUEngine(ABCModelingEngine):
             names of specific lattices to be iterated over. If names is not
             given, then all lattices will be iterated over.
 
-        Yields
+        Returns
         -------
-        ABCLattice
+        A generetor of ABCLattices
 
         Raises
         ------

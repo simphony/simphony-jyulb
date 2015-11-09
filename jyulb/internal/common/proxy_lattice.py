@@ -78,7 +78,8 @@ class ProxyLattice(ABCLattice):
 
         Parameters
         ----------
-        index : tuple of D x int (node index coordinate)
+        index : int[3]
+            node index coordinate
 
         Returns
         -------
@@ -144,12 +145,12 @@ class ProxyLattice(ABCLattice):
 
         Parameters
         ----------
-        indices : iterable set of D x int, optional
+        indices : iterable set of int[3], optional
             node index coordinates
 
-        Yields
+        Returns
         -------
-        LatticeNode
+        A generator of LatticeNode objects
         """
         if indices is None:
             for index in np.ndindex(self._size):
@@ -159,7 +160,7 @@ class ProxyLattice(ABCLattice):
                 yield self.get_node(index)
 
     def count_of(self, item_type):
-        """ Return the count of item_type in the container.
+        """Return the count of specified items in the container.
 
         Parameters
         ----------
