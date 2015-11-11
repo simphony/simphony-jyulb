@@ -6,9 +6,9 @@ from simphony.cuds.lattice import make_cubic_lattice
 from simphony.testing.abc_check_engine import LatticeEngineCheck
 
 
-class JYUEngineCheck(LatticeEngineCheck):
+class JYULBEngineCheck(LatticeEngineCheck):
 
-    """ Common parameters for JYUEngine test cases """
+    """ Common parameters for JYU-LB engine test cases """
 
     def _setup_test_problem(self, engine):
         """ Set up parameters for Poiseuille flow problem
@@ -108,8 +108,8 @@ class JYUEngineCheck(LatticeEngineCheck):
         return self.max_vel*(1.0 - d)
 
     def create_dataset(self, name):
-        """ This method is overriden, because JyuLB requires that certain
-        CUBA keys are always defined on Proxy Lattice objects.
+        """ This method is overriden, because JYU-LB requires that certain
+        CUBA keys are always defined on ProxyLattice objects.
 
         """
         lat = make_cubic_lattice(name, 1.0, (2, 3, 4))
@@ -128,80 +128,3 @@ class JYUEngineCheck(LatticeEngineCheck):
         """ Not applicable to JYU-LB
         """
         pass
-
-    def test_delete_dataset(self):
-        """ JYU-LB does not support multiple datasets, therefore
-        this test is overridden
-        """
-        engine = self.engine_factory()
-        engine.add_dataset(self.create_dataset("test"))
-        for ds in engine.iter_datasets():
-            engine.remove_dataset(ds.name)
-            with self.assertRaises(ValueError):
-                engine.get_dataset("test")
-
-    def test_dataset_rename(self):
-        """ JYU-LB does not support multiple datasets, therefore
-        this test is overridden
-        """
-        engine = self.engine_factory()
-        engine.add_dataset(self.create_dataset(name='foo'))
-        ds = engine.get_dataset("foo")
-        ds.name = "bar"
-        self.assertEqual(ds.name, "bar")
-
-        # we should not be able to use the old name "foo"
-        with self.assertRaises(ValueError):
-            engine.get_dataset("foo")
-        with self.assertRaises(ValueError):
-            engine.remove_dataset("foo")
-        with self.assertRaises(ValueError):
-            [_ for _ in engine.iter_datasets(names=["foo"])]
-
-        # we should be able to access using the new "bar" name
-        ds_bar = engine.get_dataset("bar")
-        self.assertEqual(ds_bar.name, "bar")
-
-        # and we should be able to use the no-longer used
-        # "foo" name when adding another dataset
-        # remove the other dataset first
-        engine.remove_dataset("bar")
-        ds = engine.add_dataset(self.create_dataset(name='foo'))
-
-    def test_add_dataset_data_copy(self):
-        """ JYU-LB does not support multiple datasets, therefore
-        this test is overridden
-        """
-        pass
-
-    def test_get_dataset_names(self):
-        """ JYU-LB does not support multiple datasets, therefore
-        this test is overridden
-        """
-
-        engine = self.engine_factory()
-        # add a few empty datasets
-        ds_names = ["test"]
-
-        engine.add_dataset(self.create_dataset("test"))
-
-        # test that we are getting all the names
-        names = [
-            n for n in engine.get_dataset_names()]
-        self.assertEqual(names, ds_names)
-
-    def test_iter_dataset(self):
-        """ JYU-LB does not support multiple datasets, therefore
-        this test is overridden
-        """
-        engine = self.engine_factory()
-
-        ds_names = ["test"]
-        engine.add_dataset(self.create_dataset("test"))
-
-        # test iterating over all
-        names = [ds.name for ds in engine.iter_datasets()]
-        self.assertEqual(names, ds_names)
-
-        for ds in engine.iter_datasets(ds_names):
-            self.check_instance_of_dataset(ds)

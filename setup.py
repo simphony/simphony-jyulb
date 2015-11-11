@@ -35,7 +35,7 @@ extensions = [
 ]
 
 setup(
-    name='jyu_engine',
+    name='jyulb_engine',
     version='0.1.4.dev0',
     author='SimPhoNy FP7 European Project',
     description='Implementation of JYU-LB wrappers',
@@ -44,8 +44,8 @@ setup(
     ext_modules=cythonize(extensions),
     entry_points={
         'simphony.engine': [
-            'jyulb_fileio_isothermal = jyulb.fileio.isothermal.jyu_engine',
-            'jyulb_internal_isothermal = jyulb.internal.isothermal.jyu_engine',
+            'jyulb_fileio_isothermal = jyulb.fileio.isothermal.jyulb_engine',
+            'jyulb_internal_isothermal = jyulb.internal.isothermal.jyulb_engine',
         ]
     }
 )

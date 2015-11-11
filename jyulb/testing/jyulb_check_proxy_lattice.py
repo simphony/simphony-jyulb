@@ -4,7 +4,7 @@ from simphony.testing.utils import (create_data_container)
 from simphony.testing.abc_check_lattice import CheckLatticeNodeOperations
 
 
-class JYUProxyLatticeNodeOperations(CheckLatticeNodeOperations):
+class ProxyLatticeNodeOperations(CheckLatticeNodeOperations):
     """
     TODO https://github.com/simphony/simphony-common/issues/216
 

@@ -4,11 +4,11 @@ import numpy as np
 
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
-from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
+from jyulb.fileio.common.proxy_lattice import ProxyLattice
 from simphony.testing.abc_check_lattice import (
     CheckLatticeContainer, CheckLatticeNodeCoordinates)
-from jyulb.testing.jyu_check_proxy_lattice import (
-    JYUProxyLatticeNodeOperations)
+from jyulb.testing.jyulb_check_proxy_lattice import (
+    ProxyLatticeNodeOperations)
 
 
 def _create_zeroed_lattice(name, primitive_cell, size, origin):
@@ -20,12 +20,12 @@ def _create_zeroed_lattice(name, primitive_cell, size, origin):
     ext_ndata[CUBA.DENSITY] = np.zeros(size[::-1], dtype=np.float64)
     ext_ndata[CUBA.VELOCITY] = np.zeros(size[::-1] + (3,), dtype=np.float64)
     ext_ndata[CUBA.FORCE] = np.zeros(size[::-1] + (3,), dtype=np.float64)
-    return JYULatticeProxy(name, primitive_cell, size, origin, ext_ndata)
+    return ProxyLattice(name, primitive_cell, size, origin, ext_ndata)
 
 
-class TestJYULatticeProxyContainer(CheckLatticeContainer, unittest.TestCase):
+class TestProxyLatticeContainer(CheckLatticeContainer, unittest.TestCase):
 
-    """Test case for JYULatticeProxy class."""
+    """Test case for ProxyLattice class."""
     def container_factory(self, name, primitive_cell, size, origin):
         return _create_zeroed_lattice(name, primitive_cell, size, origin)
 
@@ -33,8 +33,8 @@ class TestJYULatticeProxyContainer(CheckLatticeContainer, unittest.TestCase):
         return set(CUBA)
 
 
-class TestJYULatticeProxyNodeOperations(JYUProxyLatticeNodeOperations,
-                                        unittest.TestCase):
+class TestProxyLatticeNodeOperations(ProxyLatticeNodeOperations,
+                                     unittest.TestCase):
 
     def container_factory(self, name, primitive_cell, size, origin):
         return _create_zeroed_lattice(name, primitive_cell, size, origin)
@@ -51,8 +51,8 @@ class TestJYULatticeProxyNodeOperations(JYUProxyLatticeNodeOperations,
                              VELOCITY=[0, 0, 0], FORCE=[0, 0, 0])
 
 
-class TestJYULatticeProxyNodeCoordinates(CheckLatticeNodeCoordinates,
-                                         unittest.TestCase):
+class TestProxyLatticeNodeCoordinates(CheckLatticeNodeCoordinates,
+                                      unittest.TestCase):
 
     def container_factory(self, name, primitive_cell, size, origin):
         return _create_zeroed_lattice(name, primitive_cell, size, origin)

@@ -5,7 +5,7 @@ from simphony.core.data_container import DataContainer
 from simphony.cuds.lattice import LatticeNode
 
 
-class JYULatticeProxy(ABCLattice):
+class ProxyLattice(ABCLattice):
     """
     A proxy lattice for accessing state data of a JYU-LB modeling engine.
 
@@ -100,7 +100,7 @@ class JYULatticeProxy(ABCLattice):
         ----------
         nodes : iterable of LatticeNode objects
             reference to LatticeNode objects from where the data is copied
-            to the JYULatticeProxy
+            to the ProxyLattice
 
         Raises
         ------

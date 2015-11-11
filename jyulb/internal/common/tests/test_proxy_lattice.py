@@ -10,8 +10,8 @@ from jyulb.internal.common.domain import PyLattice, PyGeometry
 from jyulb.internal.common.domain import PyIsothermalData
 from simphony.testing.abc_check_lattice import (
     CheckLatticeContainer, CheckLatticeNodeCoordinates)
-from jyulb.testing.jyu_check_proxy_lattice import (
-    JYUProxyLatticeNodeOperations)
+from jyulb.testing.jyulb_check_proxy_lattice import (
+    ProxyLatticeNodeOperations)
 
 
 def _create_zeroed_lattice(name, primitive_cell, size, origin):
@@ -46,7 +46,7 @@ class TestProxyLatticeContainer(CheckLatticeContainer, unittest.TestCase):
         return set(CUBA)
 
 
-class TestProxyLatticeNodeOperations(JYUProxyLatticeNodeOperations,
+class TestProxyLatticeNodeOperations(ProxyLatticeNodeOperations,
                                      unittest.TestCase):
 
     def container_factory(self, name, primitive_cell, size, origin):

@@ -1,21 +1,24 @@
-"""Testing module for a file-io based wrapper for JYU-LB modeling engine."""
+"""Testing module for an internal wrapper for JYU-LB modeling engine."""
 import time
 import os
 import tempfile
 import shutil
 import unittest
-from simphony.engine import jyulb_fileio_isothermal as lb
-from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
-from jyulb.testing.jyu_check_engine import JYUEngineCheck
+from simphony.engine import jyulb_internal_isothermal as lb
+from jyulb.internal.common.proxy_lattice import ProxyLattice
+from jyulb.testing.jyulb_check_engine import JYULBEngineCheck
+from simphony.testing.abc_check_engine import LatticeEngineCheck
 
 
-class JYUEngineTestCase(JYUEngineCheck, unittest.TestCase):
+class JYULBEngineTestCase(JYULBEngineCheck, unittest.TestCase):
 
-    """Test case for JYUEngine class."""
+    """Test case for JYULBEngine class."""
 
     def setUp(self):
-        self.fluid_enum = JYULatticeProxy.FLUID_ENUM
-        self.solid_enum = JYULatticeProxy.SOLID_ENUM
+        LatticeEngineCheck.setUp(self, number_datasets_used_in_testing=1)
+
+        self.fluid_enum = ProxyLattice.FLUID_ENUM
+        self.solid_enum = ProxyLattice.SOLID_ENUM
         self.temp_dir = tempfile.mkdtemp()
         self.saved_path = os.getcwd()
         os.chdir(self.temp_dir)
@@ -26,15 +29,15 @@ class JYUEngineTestCase(JYUEngineCheck, unittest.TestCase):
         shutil.rmtree(self.temp_dir)
 
     def engine_factory(self):
-        return lb.JYUEngine()
+        return lb.JYULBEngine()
 
     def test_run_engine(self):
         """Running the JYULB modeling engine."""
-        engine = lb.JYUEngine()
+        engine = lb.JYULBEngine()
 
         # Set engine dependent parameters
-        self.coll_oper = lb.JYUEngine.TRT_ENUM
-        self.flow_type = lb.JYUEngine.STOKES_FLOW_ENUM
+        self.coll_oper = lb.JYULBEngine.TRT_ENUM
+        self.flow_type = lb.JYULBEngine.STOKES_FLOW_ENUM
 
         # Set other problem parameters
         self._setup_test_problem(engine)

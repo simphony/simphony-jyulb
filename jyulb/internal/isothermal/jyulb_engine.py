@@ -9,7 +9,7 @@ from simphony.core.cuba import CUBA
 import numpy as np
 
 
-class JYUEngine(ABCModelingEngine):
+class JYULBEngine(ABCModelingEngine):
 
     """Internal wrapper for the JYU-LB Isothermal 3D flow modeling engine.
 
@@ -34,8 +34,6 @@ class JYUEngine(ABCModelingEngine):
         container of attributes related to the system parameters/conditions:
         kinematic viscosity, reference density, gravity, flow type, and
         enforcement of external forcing.
-    SD : dict
-        container of state data
     """
 
     # Enumeration of some values for the configuration parameters
@@ -49,9 +47,9 @@ class JYUEngine(ABCModelingEngine):
     REG_ENUM = solver.REG_ENUM
 
     def __init__(self):
-        """Initialize and set default parameters for CM, BC, SP, and SD."""
-        # Definition of CM, SP, BC, and SD data components
-        self._lattice_proxy = None
+        """Initialize and set default parameters for CM, SP, and BC."""
+        # Definition of CM, SP, and BC data components
+        self._proxy_lattice = None
         self._solver = None
         self._pygeom = None
         self._prms = solver.PyFlowParams()
@@ -59,11 +57,10 @@ class JYUEngine(ABCModelingEngine):
 
         self.CM = {}
         self.SP = {}
-        self._SD = {}
         self.BC = {}
 
         # Default Computational Method data
-        self.CM[CUBAExtension.COLLISION_OPERATOR] = JYUEngine.TRT_ENUM
+        self.CM[CUBAExtension.COLLISION_OPERATOR] = JYULBEngine.TRT_ENUM
         self.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10000
         self.CM[CUBA.TIME_STEP] = 1.0
         self.CM[CUBA.NAME] = 'default'
@@ -72,7 +69,7 @@ class JYUEngine(ABCModelingEngine):
         self.SP[CUBA.KINEMATIC_VISCOSITY] = 0.1
         self.SP[CUBAExtension.REFERENCE_DENSITY] = 1.0
         self.SP[CUBAExtension.GRAVITY] = (0.0, 0.0, 0.0)
-        self.SP[CUBAExtension.FLOW_TYPE] = JYUEngine.STOKES_FLOW_ENUM
+        self.SP[CUBAExtension.FLOW_TYPE] = JYULBEngine.STOKES_FLOW_ENUM
 
         # Default Boundary Condition data
         self.BC[CUBA.VELOCITY] = {'open': 'periodic',
@@ -89,8 +86,8 @@ class JYUEngine(ABCModelingEngine):
         RuntimeError
            if a lattice has not been added.
         """
-        if self._lattice_proxy is None:
-            message = 'A lattice is not added before run in JYUEngine'
+        if self._proxy_lattice is None:
+            message = 'A lattice is not added before run in JYULBEngine'
             raise RuntimeError(message)
 
         if not self._is_fdata_initialized:
@@ -117,12 +114,11 @@ class JYUEngine(ABCModelingEngine):
             If the lattice type of the container is not cubic.
 
         """
-        self._update_dataset_names()
         if not isinstance(container, ABCLattice):
-            message = 'Only lattice containers are supported in JYUEngine'
+            message = 'Only lattice containers are supported in JYULBEngine'
             raise TypeError(message)
-        if bool(self._SD):
-            message = 'A lattice container already exists in JYUEngine'
+        if bool(self._proxy_lattice):
+            message = 'A lattice container already exists in JYULBEngine'
             raise ValueError(message)
         lat_type = container.primitive_cell.bravais_lattice
         if lat_type is not BravaisLattice.CUBIC:
@@ -159,70 +155,79 @@ class JYUEngine(ABCModelingEngine):
 
         name = container.name
         pc = container.primitive_cell
-        self._lattice_proxy = ProxyLattice(name, pc, self._pygeom, pyfdata)
+        self._proxy_lattice = ProxyLattice(name, pc, self._pygeom, pyfdata)
 
-        self._lattice_proxy.update_nodes(container.iter_nodes())
+        self._proxy_lattice.update_nodes(container.iter_nodes())
 
-        self._lattice_proxy.data = container.data
-
-        self._SD[name] = self._lattice_proxy
+        self._proxy_lattice.data = container.data
 
     def remove_dataset(self, name):
-        """ Remove a dataset from the internal
+        """Delete a lattice.
 
         Parameters
         ----------
-        name: str
-            name of CUDS container to be deleted
+        name : str
+            name of the lattice to be deleted.
 
         Raises
         ------
-        ValueError:
-            If there is no dataset with the given name
+        ValueError
+            if name is not equal to the ProxyLattice name
+            if no lattices are added in JYULBEngine
 
         """
-        self._update_dataset_names()
-        if name not in self._SD:
-            message = 'Container does not exists in JYUEngine'
-            raise ValueError(message)
+        if self._proxy_lattice is not None:
+            if self._proxy_lattice.name is not name:
+                message = 'Container does not exist in JYULBEngine'
+                raise ValueError(message)
+            else:
+                self._proxy_lattice = None
+                self._is_fdata_initialized = False
+                self._solver = None
         else:
-            del self._SD[name]
-            self._lattice_proxy = None
-            self._is_fdata_initialized = False
-            self._solver = None
+            message = 'No lattices added in JYULBEngine'
+            raise ValueError(message)
 
     def get_dataset(self, name):
-        """ Get the dataset
+        """ Get a lattice.
+
+        The returned lattice can be used to query and update the state of the
+        lattice inside the modeling engine.
 
         Parameters
         ----------
-        name: str
-            name of CUDS container to be retrieved.
+        name : str
+            name of the lattice to be retrieved.
 
         Returns
         -------
-        container :
-            A proxy of the dataset named ``name`` that is stored
-            internally in the Engine.
+        ABCLattice
 
         Raises
         ------
-        ValueError:
-            If there is no dataset with the given name
+        ValueError
+            if any one of the names is not equal to the ProxyLattice name
+            if no lattices are added in JYULBEngine
 
         """
-        self._update_dataset_names()
-        if name not in self._SD:
-            message = 'Container does not exists in JYUEngine'
+        if self._proxy_lattice is not None:
+            if self._proxy_lattice.name is not name:
+                message = 'Container does not exists in JYULBEngine'
+                raise ValueError(message)
+            else:
+                return self._proxy_lattice
+        else:
+            message = 'No lattices added in JYULBEngine'
             raise ValueError(message)
-        return self._lattice_proxy
 
     def get_dataset_names(self):
         """ Returns the names of the all the datasets in the engine workspace.
 
         """
-        self._update_dataset_names()
-        return self._SD.keys()
+        if self._proxy_lattice is not None:
+            return [self._proxy_lattice.name]
+        else:
+            return []
 
     def iter_datasets(self, names=None):
         """Iterate over a subset or all of the lattices.
@@ -240,24 +245,18 @@ class JYUEngine(ABCModelingEngine):
         Raises
         ------
         ValueError
-            if any one of the names is not in SD
+            if any one of the names is not equal to the ProxyLattice name
+            if no lattices are added in JYULBEngine
         """
-        self._update_dataset_names()
-        if names is None:
-            for name in self._SD.keys():
-                yield self._SD[name]
+        if self._proxy_lattice is not None:
+            if names is None:
+                yield self._proxy_lattice
+            else:
+                for name in names:
+                    if self._proxy_lattice.name is not name:
+                        message = 'State data does not contain requested item'
+                        raise ValueError(message)
+                    yield self._proxy_lattice
         else:
-            for name in names:
-                if name not in self._SD.keys():
-                    message = 'State data does not contain requested item'
-                    raise ValueError(message)
-                yield self._SD[name]
-
-    def _update_dataset_names(self):
-        """ Go through dataset names and update them to self._SD dictionary
-
-        """
-        for name in self._SD.keys():
-            container = self._SD[name]
-            if container.name is not name:
-                self._SD[container.name] = self._SD.pop(name)
+            message = 'No lattices added in JYULBEngine'
+            raise ValueError(message)
