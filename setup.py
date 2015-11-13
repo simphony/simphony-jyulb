@@ -44,8 +44,10 @@ setup(
     ext_modules=cythonize(extensions),
     entry_points={
         'simphony.engine': [
-            'jyulb_fileio_isothermal = jyulb.fileio.isothermal.jyulb_engine',
-            'jyulb_internal_isothermal = jyulb.internal.isothermal.jyulb_engine',
+            'jyulb_fileio_isothermal =' +
+            'jyulb.fileio.isothermal.jyulb_engine',
+            'jyulb_internal_isothermal =' +
+            'jyulb.internal.isothermal.jyulb_engine'
         ]
-    }
+    },
 )
