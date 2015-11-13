@@ -221,10 +221,11 @@ class JYULBEngine(ABCModelingEngine):
         """
         if self._proxy_lattice is not None:
             if self._proxy_lattice.name is not name:
-                message = 'Container does not exist in JYUEngine'
+                message = 'Container does not exist in JYULBEngine'
                 raise ValueError(message)
             else:
                 self._data = {}
+                self._proxy_lattice._data = None
                 self._proxy_lattice = None
         else:
             message = 'No lattices added in JYULBEngine'

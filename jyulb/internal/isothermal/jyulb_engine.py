@@ -181,6 +181,8 @@ class JYULBEngine(ABCModelingEngine):
                 message = 'Container does not exist in JYULBEngine'
                 raise ValueError(message)
             else:
+                self._proxy_lattice._fdata = None
+                self._pygeom = None
                 self._proxy_lattice = None
                 self._is_fdata_initialized = False
                 self._solver = None

@@ -32,7 +32,7 @@ class JYULBEngineTestCase(JYULBEngineCheck, unittest.TestCase):
         return lb.JYULBEngine()
 
     def test_run_engine(self):
-        """Running the JYULB modeling engine."""
+        """Running the JYU-LB modeling engine."""
         engine = lb.JYULBEngine()
 
         # Set engine dependent parameters
