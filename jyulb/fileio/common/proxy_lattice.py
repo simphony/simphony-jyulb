@@ -1,61 +1,52 @@
 import numpy as np
-from simphony.core.cuba import CUBA
 from simphony.cuds.abc_lattice import ABCLattice
 from simphony.core.cuds_item import CUDSItem
 from simphony.core.data_container import DataContainer
 from simphony.cuds.lattice import LatticeNode
-from jyulb.internal.common import domain
 
 
 class ProxyLattice(ABCLattice):
-
     """
-    A proxy lattice for isothermal state data of a JYU-LB modelling engine.
+    A proxy lattice for accessing state data of a JYU-LB modeling engine.
 
     Updates and queries of node data are relayed to external data storages.
-    Only CUBA keywords DENSITY, VELOCITY, and FORCE are acknowledged.
+    Acknowledges only those CUBA keywords which are prescribed at the
+    initialization.
 
     Enumeration of MATERIAL ID values for SOLID and FLUID lattice nodes.
 
     Attributes
     ----------
     name : str
+        name of lattice
     primitive_cell : PrimitiveCell
-        primitive cell speficying the 3D Bravais lattice
+        primitive cell specifying the 3D Bravais lattice
     size : int[3]
-        number of lattice nodes (in the direction of primitive vector).
+        lattice dimensions
     origin : float[3]
         lattice origin
     data : DataContainer
-        high level CUBA data assigned to lattice.
-    geom : PyGeometry
-        lattice structure info and MATERIAL_ID data for lattice nodes.
-    fdata : PyIsothermalData
-        isothermal field data for fluid lattice nodes.
+        high level CUBA data assigned to lattice
+    external_node_data : dictionary
+        references (value) to external data storages (multidimensional
+        arrays) for each prescribed CUBA keyword (key)
     """
 
     # Enumeration of material IDs
-    SOLID_ENUM = domain.SOLID_ENUM
-    FLUID_ENUM = domain.FLUID_ENUM
+    SOLID_ENUM = 0
+    FLUID_ENUM = 255
 
-    def __init__(self, name, primitive_cell, geom, fdata):
+    def __init__(self, name, primitive_cell, size, origin, ext_node_data):
         self.name = name
         self._primitive_cell = primitive_cell
+        self._size = size[0], size[1], size[2]
+        self._origin = np.array((origin[0], origin[1], origin[2]),
+                                dtype=np.float)
         self._data = DataContainer()
         self._items_count = {
             CUDSItem.NODE: lambda: self._size
         }
-        self._geom = geom
-        self._fdata = fdata
-
-        size = np.zeros(3, dtype=np.uint32)
-        self._geom.get_lattice().get_size(size)
-        self._size = size[0], size[1], size[2]
-
-        origin = np.zeros(3, dtype=np.float64)
-        self._geom.get_lattice().get_origin(origin)
-        self._origin = np.array((origin[0], origin[1], origin[2]),
-                                dtype=np.float)
+        self._external_node_data = ext_node_data
 
     @property
     def size(self):
@@ -90,28 +81,20 @@ class ProxyLattice(ABCLattice):
         IndexError
            if the given index includes negative components.
         """
-        if any(value < 0 for value in index):
-            raise IndexError('invalid index: {}'.format(index))
+        # JYU-LB modeling engines assume a specific memory order;
+        # the indices must be reversed in a data access
+        rev_ind = tuple(index[::-1])
 
-        node = LatticeNode(index)
+        if any(value < 0 for value in rev_ind):
+            raise IndexError('invalid index: {}'.format(rev_ind))
 
-        ijk = np.array(index, dtype=np.uint32)
-        node.data[CUBA.MATERIAL_ID] = self._geom.get_material_ijk(ijk)
-
-        if node.data[CUBA.MATERIAL_ID] == ProxyLattice.FLUID_ENUM:
-            vel = np.zeros(3, dtype=np.float64)
-            frc = np.zeros(3, dtype=np.float64)
-            self._fdata.get_vel_ijk(ijk, vel)
-            self._fdata.get_frc_ijk(ijk, frc)
-
-            node.data[CUBA.DENSITY] = self._fdata.get_den_ijk(ijk)
-            node.data[CUBA.VELOCITY] = vel
-            node.data[CUBA.FORCE] = frc
-
+        node = LatticeNode(tuple(index))
+        for key in self._external_node_data:
+            node.data[key] = self._external_node_data[key][rev_ind]
         return node
 
     def update_nodes(self, nodes):
-        """Update the corresponding lattice node (data copied).
+        """Update the corresponding lattice nodes (data copied).
 
         Parameters
         ----------
@@ -125,20 +108,16 @@ class ProxyLattice(ABCLattice):
            if the index of the given node includes negative components.
         """
         for node in nodes:
-            if any(value < 0 for value in node.index):
-                raise IndexError('invalid index: {}'.format(node.index))
+            # JYU-LB modeling engines assume a specific memory order;
+            # the indexes must be reversed in data access
+            ind = node.index
+            rev_ind = ind[::-1]
+            if any(value < 0 for value in rev_ind):
+                raise IndexError('invalid index: {}'.format(rev_ind))
 
-            ijk = np.array(node.index, dtype=np.uint32)
-
-            if self._geom.get_material_ijk(ijk) == ProxyLattice.FLUID_ENUM:
-                if CUBA.DENSITY in node.data:
-                    self._fdata.set_den_ijk(ijk, node.data[CUBA.DENSITY])
-                if CUBA.VELOCITY in node.data:
-                    vel = np.array(node.data[CUBA.VELOCITY], dtype=np.float64)
-                    self._fdata.set_vel_ijk(ijk, vel)
-                if CUBA.FORCE in node.data:
-                    frc = np.array(node.data[CUBA.FORCE], dtype=np.float64)
-                    self._fdata.set_frc_ijk(ijk, frc)
+            for key in self._external_node_data:
+                if key in node.data:
+                    self._external_node_data[key][rev_ind] = node.data[key]
 
     def iter_nodes(self, indices=None):
         """Get an iterator over the LatticeNodes described by the indices.
@@ -150,7 +129,7 @@ class ProxyLattice(ABCLattice):
 
         Returns
         -------
-        A generator of LatticeNode objects
+        A generator for LatticeNode objects
         """
         if indices is None:
             for index in np.ndindex(self._size):

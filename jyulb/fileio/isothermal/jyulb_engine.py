@@ -1,6 +1,7 @@
-from jyulb.fileio.common.jyu_lattice_proxy import JYULatticeProxy
+from jyulb.fileio.common.proxy_lattice import ProxyLattice
+from simphony.cuds.abc_lattice import ABCLattice
+from simphony.cuds.primitive_cell import BravaisLattice
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
-from simphony.core.data_container import DataContainer
 from jyulb.cuba_extension import CUBAExtension
 from simphony.core.cuba import CUBA
 import numpy as np
@@ -8,7 +9,7 @@ import subprocess
 import os
 
 
-class JYUEngine(ABCModelingEngine):
+class JYULBEngine(ABCModelingEngine):
 
     """File-IO wrapper for the JYU-LB Isothermal 3D flow modeling engine.
 
@@ -24,12 +25,12 @@ class JYUEngine(ABCModelingEngine):
 
     Attributes
     ----------
-    BC : DataContainer
+    BC : dict
         container of attributes related to the boundary conditions.
-    CM : DataContainer
+    CM : dict
         container of attributes related to the computational method:
         collision operator, number of time steps, and time step.
-    SP : DataContainer
+    SP : dict
         container of attributes related to the system parameters/conditions:
         kinematic viscosity, reference density, gravity, flow type, and
         enforcement of external forcing.
@@ -46,16 +47,16 @@ class JYUEngine(ABCModelingEngine):
     REG_ENUM = 3
 
     def __init__(self):
-        """Initialize and set default parameters for CM, BC, SP, and SD."""
-        # Definition of CM, SP, BC, and SD data components
+        """Initialize and set default parameters for CM, SP, and BC."""
+        # Definition of CM, SP, and BC data components
         self._data = {}
-        self._lattice = None
+        self._proxy_lattice = None
         self.CM = {}
         self.SP = {}
-        self.BC = DataContainer()
+        self.BC = {}
 
         # Default Computational Method data
-        self.CM[CUBAExtension.COLLISION_OPERATOR] = JYUEngine.TRT_ENUM
+        self.CM[CUBAExtension.COLLISION_OPERATOR] = JYULBEngine.TRT_ENUM
         self.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10000
         self.CM[CUBA.TIME_STEP] = 1.0
         self.base_fname = 'jyu_engine'
@@ -64,7 +65,7 @@ class JYUEngine(ABCModelingEngine):
         self.SP[CUBA.KINEMATIC_VISCOSITY] = 0.1
         self.SP[CUBAExtension.REFERENCE_DENSITY] = 1.0
         self.SP[CUBAExtension.GRAVITY] = (0.0, 0.0, 0.0)
-        self.SP[CUBAExtension.FLOW_TYPE] = JYUEngine.STOKES_FLOW_ENUM
+        self.SP[CUBAExtension.FLOW_TYPE] = JYULBEngine.STOKES_FLOW_ENUM
         self.SP[CUBAExtension.EXTERNAL_FORCING] = False
 
         # Default Boundary Condition data
@@ -83,7 +84,7 @@ class JYUEngine(ABCModelingEngine):
            if a lattice has not been added or
            if execution of the modeling engine fails.
         """
-        if self._lattice is None:
+        if self._proxy_lattice is None:
             message = 'A lattice is not added before run in JYUEngine'
             raise RuntimeError(message)
 
@@ -120,9 +121,9 @@ class JYUEngine(ABCModelingEngine):
             raise RuntimeError(message)
 
         # Read the simulated flow field
-        nx = self._lattice.size[0]
-        ny = self._lattice.size[1]
-        nz = self._lattice.size[2]
+        nx = self._proxy_lattice.size[0]
+        ny = self._proxy_lattice.size[1]
+        nz = self._proxy_lattice.size[2]
 
         den_data = self._data[CUBA.DENSITY]
         vel_data = self._data[CUBA.VELOCITY]
@@ -144,41 +145,45 @@ class JYUEngine(ABCModelingEngine):
         if self.SP[CUBAExtension.EXTERNAL_FORCING]:
             os.remove(frc_write_fname)
 
-    def add_lattice(self, lattice):
-        """Add a lattice to the modeling engine.
+    def add_dataset(self, container):
+        """Add a CUDS Lattice container
 
         The following CUBA keywords are acknowledged in node data:
         MATERIAL_ID, DENSITY, VELOCITY, and FORCE.
 
         Parameters
         ----------
-        lattice : ABCLattice
-            lattice to be added.
-
-        Returns
-        -------
-        proxy : ABCLattice
-            A lattice to be used to update/query the internal representation
-            stored inside the modeling-engine. See get_lattice for more
-            information.
+        container : {ABCLattice}
+            The CUDS Lattice container to add to the engine.
 
         Raises
         ------
-        RuntimeError
-           if a second lattice is added.
+        TypeError:
+            If the container type is not supported by the engine.
+        ValueError:
+            If there is already a dataset with the given name.
+        ValueError:
+            If the lattice type of the container is not cubic.
+
         """
-        if self._lattice is not None:
-            message = 'Not possible to add a second lattice in JYUEngine'
-            raise RuntimeError(message)
+        if not isinstance(container, ABCLattice):
+            message = 'Only lattice containers are supported in JYULBEngine'
+            raise TypeError(message)
+        if bool(self._proxy_lattice):
+            message = 'A lattice container already exists in JYULBEngine'
+            raise ValueError(message)
+        lat_type = container.primitive_cell.bravais_lattice
+        if lat_type is not BravaisLattice.CUBIC:
+            message = 'Lattice type is not cubic'
+            raise ValueError(message)
 
         # Copy lattice attributes
-        name = lattice.name
-        type = lattice.type
-        nx = lattice.size[0]
-        ny = lattice.size[1]
-        nz = lattice.size[2]
-        org = lattice.origin
-        bvect = lattice.base_vect
+        name = container.name
+        pc = container.primitive_cell
+        nx = container.size[0]
+        ny = container.size[1]
+        nz = container.size[2]
+        org = container.origin
 
         # Allocate arrays for lattice data
         geom = np.zeros((nz, ny, nx), dtype=np.uint8)
@@ -192,104 +197,41 @@ class JYUEngine(ABCModelingEngine):
         self._data[CUBA.FORCE] = frc
 
         # Create a proxy lattice
-        self._lattice = JYULatticeProxy(name, type, bvect, (nx, ny, nz),
-                                        org, self._data)
+        self._proxy_lattice = ProxyLattice(name, pc, (nx, ny, nz),
+                                           org, self._data)
 
-        for node in lattice.iter_nodes():
-            self._lattice.update_node(node)
+        self._proxy_lattice.update_nodes(container.iter_nodes())
 
-        return self._lattice
+        self._proxy_lattice.data = container.data
 
-    def add_mesh(self, mesh):
-        """Add a mesh to the modeling engine.
-
-        Parameters
-        ----------
-        mesh : ABCMesh
-            mesh to be added.
-
-        Returns
-        -------
-        proxy : ABCMesh
-            A proxy mesh to be used to update/query the internal representation
-            stored inside the modeling-engine. See get_mesh for more
-            information.
-
-        Raises
-        ------
-        NotImplementedError
-           always.
-        """
-        message = 'JYUEngine does not handle meshes'
-        raise NotImplementedError(message)
-
-    def add_particles(self, particles):
-        """Add a particle container to the modeling engine.
-
-        Parameters
-        ----------
-        particles : ABCParticles
-            particle container to be added.
-
-        Returns
-        -------
-        ABCParticles
-            A particle container to be used to update/query the internal
-            representation stored inside the modeling-engine. See
-            get_particles for more information.
-
-        Raises
-        ------
-        NotImplementedError
-           always.
-        """
-        message = 'JYUEngine does not handle particle containers'
-        raise NotImplementedError(message)
-
-    def delete_lattice(self, name):
+    def remove_dataset(self, name):
         """Delete a lattice.
 
         Parameters
         ----------
         name : str
             name of the lattice to be deleted.
-        """
-        self._data = {}
-        self._lattice = None
-
-    def delete_mesh(self, name):
-        """Delete a mesh.
-
-        Parameters
-        ----------
-        name : str
-            name of the mesh to be deleted.
 
         Raises
         ------
-        NotImplementedError
-           always.
+        ValueError
+            if name is not equal to the ProxyLattice name
+            if no lattices are added in JYULBEngine
+
         """
-        message = 'JYUEngine does not handle meshes'
-        raise NotImplementedError(message)
+        if self._proxy_lattice is not None:
+            if self._proxy_lattice.name is not name:
+                message = 'Container does not exist in JYULBEngine'
+                raise ValueError(message)
+            else:
+                self._data = {}
+                self._proxy_lattice._data = None
+                self._proxy_lattice = None
+        else:
+            message = 'No lattices added in JYULBEngine'
+            raise ValueError(message)
 
-    def delete_particles(self, name):
-        """Delete a particle container.
-
-        Parameters
-        ----------
-        name : str
-            name of the particle container to be deleted.
-
-        Raises
-        ------
-        NotImplementedError
-           always.
-        """
-        message = 'JYUEngine does not handle particle containers'
-        raise NotImplementedError(message)
-
-    def get_lattice(self, name):
+    def get_dataset(self, name):
         """ Get a lattice.
 
         The returned lattice can be used to query and update the state of the
@@ -303,56 +245,34 @@ class JYUEngine(ABCModelingEngine):
         Returns
         -------
         ABCLattice
-        """
-        return self._lattice
-
-    def get_mesh(self, name):
-        """Get a mesh.
-
-        The returned mesh can be used to query and update the state of the
-        mesh inside the modeling engine.
-
-        Parameters
-        ----------
-        name : str
-            name of the mesh to be retrieved.
-
-        Returns
-        -------
-        ABCMesh
 
         Raises
         ------
-        NotImplementedError
-           always.
+        ValueError
+            if any one of the names is not equal to the ProxyLattice name
+            if no lattices are added in JYULBEngine
+
         """
-        message = 'JYUEngine does not handle meshes'
-        raise NotImplementedError(message)
+        if self._proxy_lattice is not None:
+            if self._proxy_lattice.name is not name:
+                message = 'Container does not exists in JYULBEngine'
+                raise ValueError(message)
+            else:
+                return self._proxy_lattice
+        else:
+            message = 'No lattices added in JYULBEngine'
+            raise ValueError(message)
 
-    def get_particles(self, name):
-        """Get a particle container.
+    def get_dataset_names(self):
+        """ Returns the names of the all the datasets in the engine workspace.
 
-        The returned particle container can be used to query and update the
-        state of the particle container inside the modeling engine.
-
-        Parameters
-        ----------
-        name : str
-            name of the particle container to be retrieved.
-
-        Returns
-        -------
-        ABCParticles
-
-        Raises
-        ------
-        NotImplementedError
-           always.
         """
-        message = 'JYUEngine does not handle particle containers'
-        raise NotImplementedError(message)
+        if self._proxy_lattice is not None:
+            return [self._proxy_lattice.name]
+        else:
+            return []
 
-    def iter_lattices(self, names=None):
+    def iter_datasets(self, names=None):
         """Iterate over a subset or all of the lattices.
 
         Parameters
@@ -361,54 +281,28 @@ class JYUEngine(ABCModelingEngine):
             names of specific lattices to be iterated over. If names is not
             given, then all lattices will be iterated over.
 
-        Yields
+        Returns
         -------
-        ABCLattice
-        """
-        yield self._lattice
-
-    def iter_meshes(self, names=None):
-        """Iterate over a subset or all of the meshes.
-
-        Parameters
-        ----------
-        names : sequence of str, optional
-            names of specific meshes to be iterated over. If names is not
-            given, then all meshes will be iterated over.
-
-        Yields
-        -------
-        ABCMesh
+        A generator of ABCLattice objects
 
         Raises
         ------
-        NotImplementedError
-           always.
+        ValueError
+            if any one of the names is not equal to the ProxyLattice name
+            if no lattices are added in JYULBEngine
         """
-        message = 'JYUEngine does not handle meshes'
-        raise NotImplementedError(message)
-
-    def iter_particles(self, names=None):
-        """Iterate over a subset or all of the particle containers.
-
-        Parameters
-        ----------
-        names : sequence of str, optional
-            names of specific particle containers to be iterated over.
-            If names is not given, then all particle containers will
-            be iterated over.
-
-        Yields
-        -------
-        ABCParticles
-
-        Raises
-        ------
-        NotImplementedError
-           always.
-        """
-        message = 'JYUEngine does not handle particle containers'
-        raise NotImplementedError(message)
+        if self._proxy_lattice is not None:
+            if names is None:
+                yield self._proxy_lattice
+            else:
+                for name in names:
+                    if self._proxy_lattice.name is not name:
+                        message = 'State data does not contain requested item'
+                        raise ValueError(message)
+                    yield self._proxy_lattice
+        else:
+            message = 'No lattices added in JYULBEngine'
+            raise ValueError(message)
 
     def _write_input_script(self, fname):
         """Write an input script file for the modeling engine.
@@ -422,9 +316,10 @@ class JYUEngine(ABCModelingEngine):
         f.write('# Base name of the I/O data files (raw-format files)\n')
         f.write(self.base_fname + '\n')
         f.write('# Lattice size (x y z)\n')
-        f.write('%d %d %d\n' % self._lattice.size)
+        f.write('%d %d %d\n' % self._proxy_lattice.size)
         f.write('# Lattice spacing\n')
-        f.write('%e\n' % self._lattice.base_vect[0])
+        p1 = self._proxy_lattice.primitive_cell.p1
+        f.write('%e\n' % np.sqrt(np.dot(p1, p1)))
         f.write('# Discrete time step\n')
         f.write('%e\n' % self.CM[CUBA.TIME_STEP])
         f.write('# Reference density\n')

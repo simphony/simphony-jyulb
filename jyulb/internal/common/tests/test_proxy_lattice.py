@@ -1,122 +1,126 @@
 """Testing module for jyu-lb proxy-lattice data class."""
 import unittest
 import numpy as np
-import numpy.testing as np_test
+
 from simphony.core.cuba import CUBA
 from simphony.cuds.lattice import LatticeNode
-from simphony.cuds.abstractlattice import ABCLattice
 from simphony.core.data_container import DataContainer
 from jyulb.internal.common.proxy_lattice import ProxyLattice
 from jyulb.internal.common.domain import PyLattice, PyGeometry
 from jyulb.internal.common.domain import PyIsothermalData
+from simphony.testing.abc_check_lattice import (
+    CheckLatticeContainer, CheckLatticeNodeCoordinates)
+from jyulb.testing.jyulb_check_proxy_lattice import (
+    ProxyLatticeNodeOperations)
 
 
-class ProxyLatticeTestCase(unittest.TestCase):
+def _create_zeroed_lattice(name, primitive_cell, size, origin):
+    """ Returns a lattice where the node-data only contains null values
+
+    """
+    lat = PyLattice(np.array(size, dtype=np.uint32),
+                    np.array(origin, dtype=np.float64))
+    geom = PyGeometry(lat)
+
+    for i in xrange(size[0]):
+        for j in xrange(size[1]):
+            for k in xrange(size[2]):
+                geom.set_material_ijk(
+                    np.array((i, j, k), dtype=np.uint32),
+                    ProxyLattice.FLUID_ENUM)
+
+    ivel = np.array((0.0, 0.0, 0.0), dtype=np.float64)
+    ifrc = np.array((0.0, 0.0, 0.0), dtype=np.float64)
+    fdata = PyIsothermalData(lat, 0.0, ivel, ifrc)
+
+    return ProxyLattice(name, primitive_cell, geom, fdata)
+
+
+class TestProxyLatticeContainer(CheckLatticeContainer, unittest.TestCase):
 
     """Test case for ProxyLattice class."""
+    def container_factory(self, name, primitive_cell, size, origin):
+        return _create_zeroed_lattice(name, primitive_cell, size, origin)
 
-    def setUp(self):
-        self.h = 0.1
-        self.nx = 10
-        self.ny = 20
-        self.nz = 30
-        self.name = 'Test'
-        self.type = 'Cubic'
-        self.bvec = (self.h, self.h, self.h)
-        self.size = np.array((self.nx, self.ny, self.nz), dtype=np.uint32)
-        self.orig = np.array((0, 0, 0), dtype=np.float64)
+    def supported_cuba(self):
+        return set(CUBA)
 
-        self.hl_data = DataContainer()
-        self.hl_data[CUBA.STATUS] = 0
 
-        self.lat = PyLattice(self.size, self.orig)
-        self.geom = PyGeometry(self.lat)
+class TestProxyLatticeNodeOperations(ProxyLatticeNodeOperations,
+                                     unittest.TestCase):
 
-        for index in np.ndindex(tuple(self.size)):
-            if index[0] > 0 and index[0] < self.nx-1:
-                ijk = np.array(index, dtype=np.uint32)
-                self.geom.set_material_ijk(ijk, ProxyLattice.FLUID_ENUM)
+    def container_factory(self, name, primitive_cell, size, origin):
+        return _create_zeroed_lattice(name, primitive_cell, size, origin)
 
-        ivel = np.array((0.0, 0.0, 0.0), dtype=np.float64)
-        ifrc = np.array((0.0, 0.0, 0.0), dtype=np.float64)
-        self.fdata = PyIsothermalData(self.lat, 0.0, ivel, ifrc)
+    def supported_cuba(self):
+        return [CUBA.MATERIAL_ID, CUBA.DENSITY, CUBA.VELOCITY, CUBA.FORCE]
 
-    def test_construct_lattice(self):
-        """Construction of a lattice."""
-        proxy = ProxyLattice(self.name, self.type,
-                             self.bvec, self.geom, self.fdata)
+    def _create_data_with_zero_values(self):
+        """ Return a DataContainer containing ZERO values for the
+        supported CUBA keys. CUBA.MATERIAL_ID is set to correspond to
+        fluid lattice node value.
 
-        proxy.data = self.hl_data
+        """
+        return DataContainer(MATERIAL_ID=ProxyLattice.FLUID_ENUM,
+                             DENSITY=0.0, FORCE=[0, 0, 0],
+                             VELOCITY=[0, 0, 0])
 
-        self.assertIsInstance(proxy, ABCLattice, "Error: not a ABCLattice!")
+    def test_update_nodes(self):
+        """ This test is overridden because ProxyLattice only supports
+        updating lattice nodes with CUBA.MATERIAL_ID defined as
+        ProxyLattice.FluidEnum
+        """
+        container = self.container
 
-        self.assertEqual(proxy.name, self.name)
-        self.assertEqual(proxy.type, self.type)
-        self.assertEqual(proxy._geom, self.geom)
-        self.assertEqual(proxy._fdata, self.fdata)
-        self.assertEqual(proxy.data, self.hl_data)
-        np_test.assert_array_equal(proxy.size, self.size)
-        np_test.assert_array_equal(proxy.origin, self.orig)
-        np_test.assert_array_equal(proxy.base_vect, self.bvec)
+        indices = ((2, 3, 4), (1, 2, 3))
+        nodes = [container.get_node(index) for index in indices]
+        for node in nodes:
+            node.data = self._create_data_with_zero_values()
+        container.update_nodes(nodes)
 
-        with self.assertRaises(IndexError):
-            proxy.get_node((-1, 0, 0))
+        for n in xrange(len(indices)):
+            index = indices[n]
+            new_node = container.get_node(index)
+            self.assertEqual(new_node, nodes[n])
+            # Check that `new_node` is not the same instance as `node`
+            self.assertIsNot(new_node, nodes[n])
 
-        test_node = LatticeNode((0, -1, 0))
-        with self.assertRaises(IndexError):
-            proxy.update_node(test_node)
+    def test_update_nodes_with_extra_keywords(self):
+        """ This test is overridden because ProxyLattice only supports
+        updating lattice nodes with CUBA.MATERIAL_ID defined as
+        ProxyLattice.FluidEnum
+        """
+        container = self.container
 
-    def test_set_get_iter_lattice_nodes(self):
-        """Creation of lattices using the factory functions."""
-        proxy = ProxyLattice(self.name, self.type,
-                             self.bvec, self.geom, self.fdata)
+        indices = ((2, 3, 4), (1, 2, 3))
+        nodes = [container.get_node(index) for index in indices]
+        # Update with DataContainer with non supported keys.
+        for node in nodes:
+            node.data = self._create_data_with_zero_values()
+            node.data = DataContainer(node.data, RADIUS=1)
+        container.update_nodes(nodes)
 
-        iden = 1.0
-        ivel = np.array((0.0, 0.0, 1.0), dtype=np.float64)
-        ifrc = np.array((0.0, 1.0, 0.0), dtype=np.float64)
+        for n in xrange(len(indices)):
+            index = indices[n]
+            new_node = container.get_node(index)
+            # We expect only the supported CUBA to be stored.
+            expected = LatticeNode(
+                index=nodes[n].index,
+                data=self._create_data_with_zero_values())
+            self.assertEqual(new_node, expected)
+            # Check that `new_node` is not the same instance as `node`
+            self.assertIsNot(new_node, nodes[n])
 
-        for node in proxy.iter_nodes():
-            node.data[CUBA.DENSITY] = iden
-            node.data[CUBA.VELOCITY] = ivel
-            node.data[CUBA.FORCE] = ifrc
-            proxy.update_node(node)
 
-        check_iden = 0.0
-        check_ivelx = 0.0
-        check_ively = 0.0
-        check_ivelz = 0.0
-        check_ifrcx = 0.0
-        check_ifrcy = 0.0
-        check_ifrcz = 0.0
-        check_sum = (self.nx-2)*self.ny*self.nz
+class TestProxyLatticeNodeCoordinates(CheckLatticeNodeCoordinates,
+                                      unittest.TestCase):
 
-        for node in proxy.iter_nodes():
-            if node.data[CUBA.MATERIAL_ID] == ProxyLattice.FLUID_ENUM:
-                check_iden = check_iden + node.data[CUBA.DENSITY]
-                check_ivelx = check_ivelx + node.data[CUBA.VELOCITY][0]
-                check_ively = check_ively + node.data[CUBA.VELOCITY][1]
-                check_ivelz = check_ivelz + node.data[CUBA.VELOCITY][2]
-                check_ifrcx = check_ifrcx + node.data[CUBA.FORCE][0]
-                check_ifrcy = check_ifrcy + node.data[CUBA.FORCE][1]
-                check_ifrcz = check_ifrcz + node.data[CUBA.FORCE][2]
+    def container_factory(self, name, primitive_cell, size, origin):
+        return _create_zeroed_lattice(name, primitive_cell, size, origin)
 
-        self.assertEqual(check_sum, check_iden)
-        self.assertEqual(0.0, check_ivelx)
-        self.assertEqual(0.0, check_ively)
-        self.assertEqual(check_sum, check_ivelz)
-        self.assertEqual(0.0, check_ifrcx)
-        self.assertEqual(check_sum, check_ifrcy)
-        self.assertEqual(0.0, check_ifrcz)
+    def supported_cuba(self):
+        return [CUBA.MATERIAL_ID, CUBA.DENSITY, CUBA.VELOCITY, CUBA.FORCE]
 
-        # Iterated nodes belong to the solid phase (channel walls)
-        # and should not have data related to the given CUBA keywords
-        for node in proxy.iter_nodes(np.ndindex(1, self.ny, self.nz)):
-            data = node.data
-            for key in (CUBA.DENSITY, CUBA.VELOCITY, CUBA.FORCE):
-                self.assertNotIn(key, data)
-
-        np_test.assert_array_equal((1*self.h, 2*self.h, 3*self.h),
-                                   proxy.get_coordinate((1, 2, 3)))
 
 if __name__ == '__main__':
     unittest.main()

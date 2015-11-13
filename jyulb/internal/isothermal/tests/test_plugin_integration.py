@@ -3,7 +3,7 @@ import unittest
 
 class TestPluginIntegration(unittest.TestCase):
 
-    """Test case for JYUEngine class."""
+    """Test case for JYULBEngine class."""
 
     def test_plugin_integration(self):
         """Test to run JYU-LB modeling engine."""
@@ -11,7 +11,7 @@ class TestPluginIntegration(unittest.TestCase):
         from simphony.engine import jyulb_internal_isothermal as lb
 
         # Check that the expected top level objects are available
-        self.assertTrue(hasattr(lb, 'JYUEngine'))
+        self.assertTrue(hasattr(lb, 'JYULBEngine'))
 
 
 if __name__ == '__main__':
