@@ -36,7 +36,7 @@ extensions = [
 
 setup(
     name='jyulb_engine',
-    version='0.1.4.dev0',
+    version='0.2.0',
     author='SimPhoNy FP7 European Project',
     description='Implementation of JYU-LB wrappers',
     packages=find_packages(),
