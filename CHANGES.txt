@@ -1,5 +1,12 @@
-Simphony-JYULB CHANGELOG
-======================
+Simphony-JYU-LB CHANGELOG
+=========================
+
+Release 0.2.0
+-------------
+* Support for simphony-common 0.2.2 version
+* Primitive vector representation of lattices
+* Adoption of simphony-common test templates
+* Files and objects naming overhaul
 
 Release 0.1.3
 -------------
