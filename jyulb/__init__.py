@@ -1,6 +1,6 @@
 from simphony.extension import ABCEngineExtension
 from simphony.extension import EngineInterface
-from simphony.engine.decorators import register
+#from simphony.extension.decorators import register
 
 from .internal.isothermal import JYULBEngine as InternalWrapper
 from .fileio.isothermal import JYULBEngine as FileIOWrapper
