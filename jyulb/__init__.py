@@ -24,9 +24,10 @@ class JYULBExtension(ABCEngineExtension):
         list: a list of EngineMetadata objects
         """
         # TODO: Add proper features as soon as the metadata classes are ready.
-        # lammps_features =\
-        #     self.create_engine_metadata_feature(MolecularDynamics(),
-        #                                         [Verlet()])
+        # Flow type, relaxation model etc.
+        # jyulb_features =\
+        #     self.create_engine_metadata_feature(LAMINAR_FLOW, TRT)
+
         jyulb_features = None
 
         jyulb = self.create_engine_metadata('JYULB',
