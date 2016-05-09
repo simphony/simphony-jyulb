@@ -1,5 +1,5 @@
-from simphony.engine import ABCEngineExtension
-from simphony.engine import EngineInterface
+from simphony.extension import ABCEngineExtension
+from simphony.extension import EngineInterface
 from simphony.engine.decorators import register
 
 from .internal.isothermal import JYULBEngine as InternalWrapper
