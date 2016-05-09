@@ -6,7 +6,7 @@ from .internal.isothermal import JYULBEngine as InternalWrapper
 from .fileio.isothermal import JYULBEngine as FileIOWrapper
 from .cuba_extension import CUBAExtension
 
-__all__ = ["InternalWrapper", "FileioWrapper", "CUBAExtension"]
+__all__ = ["InternalWrapper", "FileIOWrapper", "CUBAExtension"]
 
 
 @register
@@ -34,7 +34,6 @@ class JYULBExtension(ABCEngineExtension):
                                             jyulb_features,
                                             [EngineInterface.Internal,
                                              EngineInterface.FileIO])
-
         return [jyulb]
 
     def create_wrapper(self, cuds, engine_name, engine_interface):
