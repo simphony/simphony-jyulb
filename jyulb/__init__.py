@@ -2,7 +2,8 @@ from simphony.engine import ABCEngineExtension
 from simphony.engine import EngineInterface
 from simphony.engine.decorators import register
 
-from jyulb.internal.isothermal.jyulb_engine import JYULBEngine as InternalWrapper
+from jyulb.internal.isothermal.jyulb_engine import \
+    JYULBEngine as InternalWrapper
 from jyulb.fileio.isothermal.jyulb_engine import JYULBEngine as FileIOWrapper
 from jyulb.cuba_extension import CUBAExtension
 
