@@ -46,7 +46,7 @@ class JYULBEngine(ABCModelingEngine):
     MRT_ENUM = 2
     REG_ENUM = 3
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Initialize and set default parameters for CM, SP, and BC."""
         # Definition of CM, SP, and BC data components
         self._data = {}
@@ -74,6 +74,18 @@ class JYULBEngine(ABCModelingEngine):
 
         self.BC[CUBA.DENSITY] = {'open': 'periodic',
                                  'wall': 'noFlux'}
+
+        # Call the base class in order to load CUDS
+        super(JYULBEngine, self).__init__(**kwargs)
+
+    def _load_cuds(self):
+        """Load CUDS data into JyuLB engine."""
+        cuds = self.get_cuds()
+        if not cuds:
+            return
+
+        for component in cuds.iter(ABCLattice):
+            self.add_dataset(component)
 
     def run(self):
         """Run the modeling engine using the configured settings.
