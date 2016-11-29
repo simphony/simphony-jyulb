@@ -11,7 +11,6 @@ from simphony.testing.abc_check_engine import LatticeEngineCheck
 
 
 class JYULBEngineTestCase(JYULBEngineCheck, unittest.TestCase):
-
     """Test case for JYULBEngine class."""
 
     def setUp(self):
@@ -53,6 +52,7 @@ class JYULBEngineTestCase(JYULBEngineCheck, unittest.TestCase):
 
         # Analyse the results
         self._analyse_test_problem_results(engine)
+
 
 if __name__ == '__main__':
     unittest.main()
