@@ -1,6 +1,13 @@
 language: python
-
+env:
+  - SIMPHONY_VERSION=master
+  - SIMPHONY_VERSION=0.3.0
+  - SIMPHONY_VERSION=8ed81d91dbee89dbdf4a76d55d9b7f92bce773e7
+matrix:
+  allow_failures:
+    - env: SIMPHONY_VERSION=master
 install:
+  - pip install -e git+https://github.com/simphony/simphony-common.git@${SIMPHONY_VERSION}#egg=simphony
   - pip install -r dev_requirements.txt
   - sudo ./install_external.sh
   - pip install coveralls
