@@ -1,7 +1,5 @@
 language: python
 env:
-  - SIMPHONY_VERSION=master
-  - SIMPHONY_VERSION=0.3.0
   - SIMPHONY_VERSION=413eb6f5683c4733b943c300c3192265c79ac26b
 matrix:
   allow_failures:
@@ -17,6 +15,6 @@ script:
   - flake8 .
   - coverage run -m unittest discover
   - coverage report
-  
+
 after_success:
   - coveralls
