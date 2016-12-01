@@ -60,5 +60,6 @@ class TestProxyLatticeNodeCoordinates(CheckLatticeNodeCoordinates,
     def supported_cuba(self):
         return [CUBA.MATERIAL_ID, CUBA.DENSITY, CUBA.VELOCITY, CUBA.FORCE]
 
+
 if __name__ == '__main__':
     unittest.main()
