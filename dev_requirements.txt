@@ -1,5 +1,4 @@
 numpy==1.9.1
--e git+https://github.com/simphony/simphony-common.git#egg=simphony
 coverage
 flake8
 cython
