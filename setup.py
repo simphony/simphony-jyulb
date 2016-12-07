@@ -39,7 +39,7 @@ setup(
     author='SimPhoNy FP7 European Project',
     description='Implementation of JYU-LB wrappers',
     packages=find_packages(),
-    install_requires=['simphony'],
+    install_requires=['simphony~=0.4'],
     ext_modules=cythonize(extensions),
     entry_points={
         'simphony.engine': [
