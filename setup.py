@@ -1,6 +1,26 @@
+import os
 from setuptools import setup, find_packages, Extension
 from Cython.Build import cythonize
 import numpy
+
+VERSION = '0.2.1'
+
+
+def write_version_py(filename=None):
+    if filename is None:
+        filename = os.path.join(
+            os.path.dirname(__file__), 'jyulb', 'version.py')
+    ver = """\
+version = '%s'
+"""
+    fh = open(filename, 'wb')
+    try:
+        fh.write(ver % VERSION)
+    finally:
+        fh.close()
+
+
+write_version_py()
 
 extensions = [
     Extension(
@@ -35,7 +55,7 @@ extensions = [
 
 setup(
     name='jyulb_engine',
-    version='0.2.0.dev0',
+    version=VERSION,
     author='SimPhoNy FP7 European Project',
     description='Implementation of JYU-LB wrappers',
     packages=find_packages(),
