@@ -214,6 +214,6 @@ class JYULBEngineTestCaseSimulate(unittest.TestCase):
 
         self.assertTrue(rel_l2_error < 1.0e-10)
 
-        
+
 if __name__ == '__main__':
     unittest.main()
