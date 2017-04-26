@@ -1,2 +1,3 @@
 numpy>=1.9.1
+cython>=0.25.2
 jyulb>=0.2.0
