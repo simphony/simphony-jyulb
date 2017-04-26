@@ -8,7 +8,7 @@ def write_version_py(filename=None):
         filename = os.path.join(
             os.path.dirname(__file__), 'wrapper', 'version.py')
 
-    ver = """version = '%s'"""
+    ver = """version = '%s'\n"""
     fh = open(filename, 'wb')
     try:
         fh.write(ver % VERSION)

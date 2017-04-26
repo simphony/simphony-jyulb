@@ -58,7 +58,7 @@ class JYULBEngineTestCaseSimulate(unittest.TestCase):
         cuds.add([fluid, solid])
 
         # Dataset (lattice)
-        lat_size = (5, 1, 5)  # number of lattice nodes
+        lat_size = (5, 1, 1)  # number of lattice nodes
         lat_h = 1.0             # lattice spacing
         lat = make_cubic_lattice('channel', lat_h, lat_size)
 
@@ -96,7 +96,7 @@ class JYULBEngineTestCaseSimulate(unittest.TestCase):
 
         # Solver parameters (time integration, collision operator)
         ti = api.IntegrationTime(name='simulation time',
-                                 current=0.0, final=2000.0, size=1.0)
+                                 current=0.0, final=1000.0, size=1.0)
 
         ti.data[CUBA.COLLISION_OPERATOR] = 'TRT'
         cuds.add([ti])
@@ -214,5 +214,6 @@ class JYULBEngineTestCaseSimulate(unittest.TestCase):
 
         self.assertTrue(rel_l2_error < 1.0e-10)
 
+        
 if __name__ == '__main__':
     unittest.main()
