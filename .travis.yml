@@ -9,6 +9,7 @@ matrix:
 install:
   - pip install -e git+https://github.com/simphony/simphony-common.git@${SIMPHONY_VERSION}#egg=simphony
 #  - pip install -e git+https://github.com/simphony/JYU-LB.git@${JYULB_VERSION}#egg=jyulb
+  - pip install -e git+https://github.com/simphony/JYU-LB.git
   - pip install -r dev_requirements.txt
   - sudo ./install_external.sh
   - pip install coveralls
