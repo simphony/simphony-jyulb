@@ -96,7 +96,7 @@ class JYULBEngineTestCaseSimulate(unittest.TestCase):
 
         # Solver parameters (time integration, collision operator)
         ti = api.IntegrationTime(name='simulation time',
-                                 current=0.0, final=1000.0, size=1.0)
+                                 current=0.0, final=100.0, size=1.0)
 
         ti.data[CUBA.COLLISION_OPERATOR] = 'TRT'
         cuds.add([ti])
