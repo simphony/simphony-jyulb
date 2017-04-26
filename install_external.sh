@@ -31,12 +31,11 @@ temp_checkout_dir=`mktemp -d`
 
 git clone https://github.com/simphony/JYU-LB.git $temp_checkout_dir
 cd $temp_checkout_dir
-#make -j 2
-python setup.py develop
+make -j 2
 
-#echo "Moving the executable to $prefix/jyu_lb_isothermal.exe"
+echo "Moving the executable to $prefix/jyu_lb_isothermal.exe"
 # Move the executable to the desired path
-#mv  $(pwd)/bin/jyu_lb_isothermal.exe "$prefix/jyu_lb_isothermal.exe"
+mv  $(pwd)/bin/jyu_lb_isothermal.exe "$prefix/jyu_lb_isothermal.exe"
 cd ..
 
 echo "Cleaning up.."
