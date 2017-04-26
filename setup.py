@@ -23,6 +23,7 @@ setup(
     author='SimPhoNy, EU FP7 Project (Nr. 604005) www.simphony-project.eu',
     description='JYU-LB wrapper for the SimPhoNy framework',
     packages=find_packages(),
-    install_requires=['numpy>=1.9.1','simphony>=0.6','jyulb>=0.2.0'],
+#    install_requires=['numpy>=1.9.1','simphony>=0.6','jyulb>=0.2.0'],
+    install_requires=['numpy>=1.9.1','cython>=0.25.2','simphony>=0.6'],
     entry_points={'simphony.engine': ['jyulb = wrapper']}
 )
