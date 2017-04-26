@@ -2,15 +2,15 @@ language: python
 env:
   - SIMPHONY_VERSION=0.6.0
   - SIMPHONY_VERSION=master
-  - JYULB_VERSION=0.2.0
+#  - JYULB_VERSION=0.2.0
 matrix:
   allow_failures:
     - env: SIMPHONY_VERSION=master
 install:
   - pip install -e git+https://github.com/simphony/simphony-common.git@${SIMPHONY_VERSION}#egg=simphony
-  - pip install -e git+https://github.com/simphony/JYU-LB.git@${JYULB_VERSION}#egg=jyulb
+#  - pip install -e git+https://github.com/simphony/JYU-LB.git@${JYULB_VERSION}#egg=jyulb
   - pip install -r dev_requirements.txt
-#  - sudo ./install_external.sh
+  - sudo ./install_external.sh
   - pip install coveralls
   - python setup.py develop
 
