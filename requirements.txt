@@ -1,2 +1,2 @@
 numpy>=1.9.1
-cython
+jyulb>=0.2.0

@@ -1,4 +1,4 @@
-numpy==1.9.1
+numpy>=1.9.1
 coverage
 flake8
-cython
+jyulb>=0.2.0

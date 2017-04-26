@@ -1,0 +1,22 @@
+include "graphutil.gle"
+
+size 12 12
+
+begin graph
+	size 12 12
+	nobox
+
+!	yaxis min -2E-05 max 3E-05 
+!	xaxis min -1E-02 max 1E-02
+  
+	title "Flow profile" hei 0.37
+	xtitle "Distance from the centerline" hei 0.37
+	ytitle "Flow speed" hei 0.37
+
+	data flow_prof.txt d1=c1,c6
+	data flow_prof.txt d2=c1,c7
+
+  key pos bc compact offset 0.0 1.5 hei 0.35
+  d1 line lwidth 0.03 marker square msize 0.35 color black key "Simulated" 
+  d2 line lwidth 0.03 marker circle msize 0.31 color red key "Analytical" 
+end graph
